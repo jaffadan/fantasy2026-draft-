@@ -2117,12 +2117,21 @@ export class AuctionDraftApp {
       document.getElementById('ai-tab-gemini')?.click();
     }
 
+    const clearBtn = document.getElementById('btn-clear-gemini-key');
+    if (clearBtn) {
+      if (this.gemini.hasApiKey()) {
+        clearBtn.classList.remove('hidden');
+      } else {
+        clearBtn.classList.add('hidden');
+      }
+    }
+
     if (statusText) {
-      if (this.auth?.hasServerGeminiKey || this.gemini?.hasServerKey) {
+      if (this.gemini.hasApiKey()) {
+        statusText.textContent = '⚠️ Overridden by Client Key';
+        statusText.className = 'font-semibold text-amber-400';
+      } else if (this.auth?.hasServerGeminiKey || this.gemini?.hasServerKey) {
         statusText.textContent = '🔒 Active via Vercel Environment (Server)';
-        statusText.className = 'font-semibold text-emerald-400';
-      } else if (this.gemini.hasApiKey()) {
-        statusText.textContent = '✅ Configured (Client Key)';
         statusText.className = 'font-semibold text-emerald-400';
       } else {
         statusText.textContent = '❌ Not configured';
@@ -2133,6 +2142,15 @@ export class AuctionDraftApp {
     modal?.classList.remove('hidden');
     modal?.classList.add('flex');
     if (window.lucide) window.lucide.createIcons();
+  }
+
+  clearGeminiKey() {
+    this.gemini.setApiKey('');
+    const input = document.getElementById('gemini-api-key-input');
+    if (input) input.value = '';
+    this.updateGeminiStatusUI();
+    this.openGeminiModal();
+    this.showToast('Client key removed! App is now using secure Server Environment.', 'success');
   }
 
   updateGeminiStatusUI() {
