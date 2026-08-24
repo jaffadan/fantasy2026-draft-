@@ -959,6 +959,17 @@
         </button>
       </div>
 
+      <!-- Cloud Database Push -->
+      <div class="bg-indigo-950/30 p-3.5 rounded-xl border border-indigo-500/30 flex items-center justify-between text-xs">
+        <div>
+          <div class="font-bold text-indigo-300">Google Firestore Database Sync</div>
+          <div class="text-[11px] text-slate-400">Push all 344 players (32 K & 32 DST) to Google Cloud Database.</div>
+        </div>
+        <button onclick="window.app.forcePushDatasetToCloud()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg shrink-0 shadow-sm">
+          Push to Cloud DB
+        </button>
+      </div>
+
       <!-- Backup & Restore -->
       <div class="flex items-center justify-between pt-2 border-t border-slate-800 text-xs">
         <button onclick="window.app.sheetSync.exportFullLeagueJson()" class="text-blue-400 hover:underline flex items-center gap-1">

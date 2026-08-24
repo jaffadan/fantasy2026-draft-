@@ -2622,6 +2622,39 @@ export class AuctionDraftApp {
     this.showToast('Draft has been reset.', 'info');
   }
 
+  forcePushDatasetToCloud() {
+    const initialData = window.INITIAL_DRAFT_DATA;
+    if (!initialData || !initialData.players) {
+      this.showToast('Seed database not found.', 'error');
+      return;
+    }
+
+    const currentMap = new Map();
+    (this.store.state.players || []).forEach(p => currentMap.set(p.name.toLowerCase().trim(), p));
+
+    const mergedPlayers = initialData.players.map((seedP, idx) => {
+      const existing = currentMap.get(seedP.name.toLowerCase().trim());
+      if (existing) {
+        return {
+          ...seedP,
+          id: seedP.id || `p_${idx + 1}`,
+          drafted: existing.drafted || false,
+          draftedTeamId: existing.draftedTeamId || null,
+          draftedPrice: existing.draftedPrice || null,
+          draftPickNumber: existing.draftPickNumber || null,
+          isStarred: existing.isStarred || false,
+          isDND: existing.isDND || false,
+          customNotes: existing.customNotes || ""
+        };
+      }
+      return { ...seedP, id: seedP.id || `p_${idx + 1}` };
+    });
+
+    this.store.state.players = mergedPlayers;
+    this.store.save('Forced cloud database update (344 players)');
+    this.showToast(`✅ Synced all ${mergedPlayers.length} players to Google Cloud Database!`, 'success');
+  }
+
   selectAsMyTeam(teamId) {
     this.store.setUserTeam(teamId);
     const team = this.store.state.teams.find(t => t.id === teamId);

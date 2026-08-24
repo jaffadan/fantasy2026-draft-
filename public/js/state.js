@@ -39,6 +39,35 @@ export class DraftStore {
           this.state.userTeamId = dcfcTeam.id;
           this.state.teams.forEach(t => t.isUser = (t.id === dcfcTeam.id));
         }
+
+        // Auto-merge any new seed players (e.g. upgraded 32 K and 32 DST - 344 total players)
+        if (initialData.players && initialData.players.length > 0) {
+          const currentMap = new Map();
+          (this.state.players || []).forEach(p => currentMap.set(p.name.toLowerCase().trim(), p));
+
+          const mergedPlayers = initialData.players.map((seedP, idx) => {
+            const existing = currentMap.get(seedP.name.toLowerCase().trim());
+            if (existing) {
+              return {
+                ...seedP,
+                id: seedP.id || `p_${idx + 1}`,
+                drafted: existing.drafted || false,
+                draftedTeamId: existing.draftedTeamId || null,
+                draftedPrice: existing.draftedPrice || null,
+                draftPickNumber: existing.draftPickNumber || null,
+                isStarred: existing.isStarred || false,
+                isDND: existing.isDND || false,
+                customNotes: existing.customNotes || ""
+              };
+            }
+            return { ...seedP, id: seedP.id || `p_${idx + 1}` };
+          });
+
+          if (!this.state.players || this.state.players.length !== mergedPlayers.length) {
+            this.state.players = mergedPlayers;
+            this.save('Player dataset upgraded to 344 players');
+          }
+        }
       } catch (e) {
         console.error('Failed to load saved state, initializing fresh default', e);
         this.initDefault();
@@ -140,8 +169,42 @@ export class DraftStore {
     const localTargetFilter = this.state?.targetFilter;
     const localStatusFilter = this.state?.statusFilter;
 
+    const initialData = window.INITIAL_DRAFT_DATA || { players: [] };
+    let players = remoteState.players || [];
+
+    // If cloud state in Firestore was missing the upgraded 32 K and 32 DST players, upgrade it!
+    if (initialData.players && initialData.players.length > players.length) {
+      const currentMap = new Map();
+      players.forEach(p => currentMap.set(p.name.toLowerCase().trim(), p));
+
+      players = initialData.players.map((seedP, idx) => {
+        const existing = currentMap.get(seedP.name.toLowerCase().trim());
+        if (existing) {
+          return {
+            ...seedP,
+            id: seedP.id || `p_${idx + 1}`,
+            drafted: existing.drafted || false,
+            draftedTeamId: existing.draftedTeamId || null,
+            draftedPrice: existing.draftedPrice || null,
+            draftPickNumber: existing.draftPickNumber || null,
+            isStarred: existing.isStarred || false,
+            isDND: existing.isDND || false,
+            customNotes: existing.customNotes || ""
+          };
+        }
+        return { ...seedP, id: seedP.id || `p_${idx + 1}` };
+      });
+
+      setTimeout(() => {
+        if (this.syncService && typeof this.syncService.pushDraftState === 'function') {
+          this.syncService.pushDraftState(this.state, 'Upgraded cloud DB to 344 players');
+        }
+      }, 500);
+    }
+
     this.state = {
       ...remoteState,
+      players,
       activeTab: localTab || remoteState.activeTab || 'draft-room',
       searchQuery: localSearch !== undefined ? localSearch : (remoteState.searchQuery || ''),
       targetFilter: localTargetFilter || remoteState.targetFilter || 'ALL',
