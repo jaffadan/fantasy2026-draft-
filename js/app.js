@@ -2263,8 +2263,8 @@ export class AuctionDraftApp {
       this.gemini.pausePrefetch();
       this.showToast('Background AI preloader paused.', 'info');
     } else {
-      this.gemini.startBackgroundPrefetch(this.store.state.players);
-      this.showToast('Background AI preloader started! Pre-warming draft board.', 'success');
+      this.gemini.startBackgroundPrefetch(this.store.state.players, true, true);
+      this.showToast('⚡ AI preloader started! Pre-warming all remaining players...', 'success');
     }
     this.updatePreloadUI(this.gemini.getPreloadedCount(this.store.state.players.length));
   }

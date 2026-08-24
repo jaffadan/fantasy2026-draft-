@@ -75,10 +75,14 @@ export class GeminiNewsService {
   }
 
   /**
-   * Start high-speed parallel background pre-warming (5 parallel workers)
+   * Start high-speed parallel background pre-warming (3 parallel workers)
    */
-  startBackgroundPrefetch(players, priorityFirst = true) {
-    if (!this.isConfigured() || this.isCircuitBroken) return;
+  startBackgroundPrefetch(players, priorityFirst = true, forceReset = false) {
+    if (!players || players.length === 0) return;
+    if (forceReset) {
+      this.resetFailures();
+    }
+    if (this.isCircuitBroken && !forceReset) return;
 
     // Filter undrafted players that aren't already cached
     const uncached = players.filter(p => !p.drafted && !this.cache[p.id]);
@@ -101,6 +105,7 @@ export class GeminiNewsService {
 
     if (this.isPrefetching) return;
     this.isPrefetching = true;
+    this.resetFailures();
 
     // Concurrency: 2 workers for local (Ollama serializes internally), 3 for Gemini
     const concurrency = this.provider === 'local' ? 2 : 3;
