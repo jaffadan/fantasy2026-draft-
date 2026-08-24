@@ -12,9 +12,13 @@
 
 const FIREBASE_CONFIG_STORAGE = 'fantasy_draft_firebase_config_v1';
 const DEFAULT_FIREBASE_CONFIG = {
-  projectId: 'gen-lang-client-0520103267',
-  appId: '1:816919087026:web:fantasy2026draft',
-  apiKey: 'AIzaSy' // Loaded or updated via config
+  apiKey: "AIzaSyA3PPyrBMrCSiIttnhkLm2oXCSeycoFPW0",
+  authDomain: "gen-lang-client-05201032-47eab.firebaseapp.com",
+  projectId: "gen-lang-client-05201032-47eab",
+  storageBucket: "gen-lang-client-05201032-47eab.firebasestorage.app",
+  messagingSenderId: "1080393432369",
+  appId: "1:1080393432369:web:ef6239a6fb1e01c7848410",
+  measurementId: "G-H2B0GNXLET"
 };
 
 export class FirestoreSyncService {
