@@ -2104,18 +2104,26 @@ export class AuctionDraftApp {
     const localModelSelect = document.getElementById('local-ai-model-select');
     const statusText = document.getElementById('gemini-modal-key-status');
 
+    const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const providerTabsContainer = document.getElementById('ai-provider-tabs-container');
+    const localSection = document.getElementById('ai-section-local');
+
+    if (!isLocalHost) {
+      if (providerTabsContainer) providerTabsContainer.classList.add('hidden');
+      if (localSection) localSection.classList.add('hidden');
+      document.getElementById('ai-tab-gemini')?.click();
+    } else {
+      if (providerTabsContainer) providerTabsContainer.classList.remove('hidden');
+      this.loadOllamaModels();
+      if (this.gemini.provider === 'local') {
+        document.getElementById('ai-tab-local')?.click();
+      } else {
+        document.getElementById('ai-tab-gemini')?.click();
+      }
+    }
+
     if (input) input.value = this.gemini.getApiKey();
     if (localUrlInput) localUrlInput.value = this.gemini.localUrl;
-
-    // Auto-load installed models when modal opens
-    this.loadOllamaModels();
-
-    // Set active tab in modal
-    if (this.gemini.provider === 'local') {
-      document.getElementById('ai-tab-local')?.click();
-    } else {
-      document.getElementById('ai-tab-gemini')?.click();
-    }
 
     const clearBtn = document.getElementById('btn-clear-gemini-key');
     if (clearBtn) {
