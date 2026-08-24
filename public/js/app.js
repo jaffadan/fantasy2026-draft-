@@ -2118,8 +2118,16 @@ export class AuctionDraftApp {
     }
 
     if (statusText) {
-      statusText.textContent = this.gemini.hasApiKey() ? '✅ Configured' : '❌ Not configured';
-      statusText.className = this.gemini.hasApiKey() ? 'font-semibold text-emerald-400' : 'font-semibold text-slate-400';
+      if (this.auth?.hasServerGeminiKey || this.gemini?.hasServerKey) {
+        statusText.textContent = '🔒 Active via Vercel Environment (Server)';
+        statusText.className = 'font-semibold text-emerald-400';
+      } else if (this.gemini.hasApiKey()) {
+        statusText.textContent = '✅ Configured (Client Key)';
+        statusText.className = 'font-semibold text-emerald-400';
+      } else {
+        statusText.textContent = '❌ Not configured';
+        statusText.className = 'font-semibold text-slate-400';
+      }
     }
 
     modal?.classList.remove('hidden');
@@ -2287,20 +2295,19 @@ export class AuctionDraftApp {
     const input = document.getElementById('gemini-api-key-input');
     const key = input ? input.value.trim() : '';
 
-    if (!key) {
-      alert('Please enter an API key first.');
-      return;
+    if (key) {
+      this.gemini.setApiKey(key);
     }
 
-    testResult.textContent = 'Testing connection with Gemini Cloud...';
+    testResult.textContent = 'Testing connection with Gemini Cloud via Secure Backend API...';
     testResult.className = 'text-xs text-indigo-400 text-center font-medium';
 
     try {
-      this.gemini.setApiKey(key);
       const testPlayer = { id: 'test_1', name: 'Jahmyr Gibbs', pos: 'RB', team: 'DET', baselineVal: 58 };
       const res = await this.gemini.fetchPlayerNews(testPlayer, true);
       testResult.textContent = `✅ Connected successfully! (${res.source}) — Headline: "${res.headline}"`;
       testResult.className = 'text-xs text-emerald-400 text-center font-bold';
+      this.gemini.setServerKeyConfigured(true);
       this.updateGeminiStatusUI();
     } catch (e) {
       if (e.message.includes('429') || e.message.includes('quota') || e.message.includes('RESOURCE_EXHAUSTED')) {
