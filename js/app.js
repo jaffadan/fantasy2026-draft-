@@ -2200,6 +2200,25 @@ export class AuctionDraftApp {
     this.showToast('Client key removed! App is now using secure Server Environment.', 'success');
   }
 
+  refreshDefenseAiIntel() {
+    const dstPlayers = this.store.state.players.filter(p => p.pos === 'DST');
+    if (dstPlayers.length === 0) {
+      this.showToast('No defenses found in database.', 'error');
+      return;
+    }
+    // Wipe old DST entries from cache so they re-fetch with new defensive coordinator prompts
+    dstPlayers.forEach(p => {
+      delete this.gemini.cache[p.id];
+      delete this.gemini.cache[p.name.toLowerCase().replace(/[^a-z0-9]/g, '')];
+    });
+    this.gemini.saveCache();
+    this.gemini.startBackgroundPrefetch(dstPlayers, false, true);
+    this.showToast('⚡ Re-scouting all 32 Team Defenses with DC schemes & pass-rush intel...', 'success');
+    this.closeModals();
+    this.updatePreloadUI(this.gemini.getPreloadedCount(this.store.state.players.length));
+    this.render();
+  }
+
   updateGeminiStatusUI() {
     const ping = document.getElementById('gemini-status-ping');
     const dot = document.getElementById('gemini-status-dot');

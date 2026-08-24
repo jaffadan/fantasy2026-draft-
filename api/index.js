@@ -226,7 +226,43 @@ export default async function handler(req, res) {
         return;
       }
 
-      const prompt = `
+      let prompt;
+      if (pos === 'DST' || (playerName && (playerName.includes('Defense') || playerName.includes('Broncos') || playerName.includes('Steelers') || playerName.includes('Eagles') || playerName.includes('Ravens') || playerName.includes('49ers') || playerName.includes('Vikings') || playerName.includes('Texans') || playerName.includes('Bills') || playerName.includes('Jets') || playerName.includes('Cowboys') || playerName.includes('Chiefs') || playerName.includes('Lions') || playerName.includes('Chargers') || playerName.includes('Packers') || playerName.includes('Browns') || playerName.includes('Bears') || playerName.includes('Seahawks') || playerName.includes('Buccaneers') || playerName.includes('Dolphins') || playerName.includes('Colts') || playerName.includes('Rams') || playerName.includes('Saints') || playerName.includes('Jaguars') || playerName.includes('Falcons') || playerName.includes('Patriots') || playerName.includes('Bengals') || playerName.includes('Titans') || playerName.includes('Commanders') || playerName.includes('Giants') || playerName.includes('Cardinals') || playerName.includes('Raiders') || playerName.includes('Panthers')))) {
+        prompt = `
+You are a real-time fantasy football defense/special teams analyst and high-stakes auction draft expert.
+Analyze the NFL Team Defense & Special Teams (DST) unit: ${playerName} (${team} Defense).
+Search specifically for the ${playerName} DEFENSIVE unit, defensive coordinator scheme changes, pass rush (sacks/pressures), secondary coverage health, turnover generation, special teams return touchdowns, and streaming schedule.
+
+Return ONLY a valid JSON object matching this schema (no markdown code blocks, pure JSON):
+{
+  "headline": "Short defensive unit headline (e.g. 'Front-Seven Pressure Floor High; Favorable Early Schedule') (max 12 words)",
+  "summary": "2-3 concise sentences detailing their pass rush strength, secondary health, turnover outlook, and fantasy streaming viability.",
+  "injuryStatus": "Healthy" | "Minor / Probable" | "Questionable" | "Elevated Risk" | "Key Defensive Injuries",
+  "draftSentiment": "RISING" | "FALLING" | "NEUTRAL",
+  "auctionAdvice": "One actionable tactical sentence on whether to pay up for this defense ($1-$3 range) or stream.",
+  "source": "Primary defensive beat reporter or analyst name",
+  "confidence": "HIGH" | "MEDIUM"
+}
+`;
+      } else if (pos === 'K') {
+        prompt = `
+You are a real-time fantasy football kicking specialist and auction draft analyst.
+Analyze the NFL starting kicker: ${playerName} (${pos}, ${team}).
+Search for the most recent news, field goal accuracy from 50+ yards, preseason kicking competitions, offensive drive volume, indoor dome advantage, and injury health for kicker ${playerName} on the ${team}.
+
+Return ONLY a valid JSON object matching this schema (no markdown code blocks, pure JSON):
+{
+  "headline": "Short kicker headline (max 12 words)",
+  "summary": "2-3 concise sentences detailing their leg range, indoor stadium factors, offensive scoring environment, and job security.",
+  "injuryStatus": "Healthy" | "Minor / Probable" | "Questionable" | "Out / IR",
+  "draftSentiment": "RISING" | "FALLING" | "NEUTRAL",
+  "auctionAdvice": "One actionable tactical sentence on how to price this kicker in a $200 auction draft ($1-$3 range).",
+  "source": "Primary news source or reporter name",
+  "confidence": "HIGH" | "MEDIUM"
+}
+`;
+      } else {
+        prompt = `
 You are a real-time fantasy football beat reporter and high-stakes auction draft analyst.
 Search for the most recent news, injury updates, practice reports, depth chart developments, and preseason buzz for NFL player: ${playerName} (${pos}, ${team}).
 
@@ -241,6 +277,7 @@ Return ONLY a valid JSON object matching this schema (no markdown code blocks, p
   "confidence": "HIGH" | "MEDIUM"
 }
 `;
+      }
 
       const makeRequestBody = (includeSearch = true) => {
         const body = {

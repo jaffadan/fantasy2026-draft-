@@ -315,7 +315,43 @@ export class GeminiNewsService {
     }
 
     // Direct Gemini API call with Google Search Tool Grounding and multi-tier fallbacks
-    const prompt = `
+    let prompt;
+    if (player.pos === 'DST' || (player.name && (player.name.includes('Defense') || player.name.includes('Broncos') || player.name.includes('Steelers') || player.name.includes('Eagles') || player.name.includes('Ravens') || player.name.includes('49ers') || player.name.includes('Vikings') || player.name.includes('Texans') || player.name.includes('Bills') || player.name.includes('Jets') || player.name.includes('Cowboys') || player.name.includes('Chiefs') || player.name.includes('Lions') || player.name.includes('Chargers') || player.name.includes('Packers') || player.name.includes('Browns') || player.name.includes('Bears') || player.name.includes('Seahawks') || player.name.includes('Buccaneers') || player.name.includes('Dolphins') || player.name.includes('Colts') || player.name.includes('Rams') || player.name.includes('Saints') || player.name.includes('Jaguars') || player.name.includes('Falcons') || player.name.includes('Patriots') || player.name.includes('Bengals') || player.name.includes('Titans') || player.name.includes('Commanders') || player.name.includes('Giants') || player.name.includes('Cardinals') || player.name.includes('Raiders') || player.name.includes('Panthers')))) {
+      prompt = `
+You are a real-time fantasy football defense/special teams analyst and high-stakes auction draft expert.
+Analyze the NFL Team Defense & Special Teams (DST) unit: ${player.name} (${player.team} Defense).
+Search specifically for the ${player.name} DEFENSIVE unit, defensive coordinator scheme changes, pass rush (sacks/pressures), secondary coverage health, turnover generation, special teams return touchdowns, and streaming schedule.
+
+Return ONLY a valid JSON object matching this schema (no markdown code blocks, pure JSON):
+{
+  "headline": "Short defensive unit headline (e.g. 'Front-Seven Pressure Floor High; Favorable Early Schedule') (max 12 words)",
+  "summary": "2-3 concise sentences detailing their pass rush strength, secondary health, turnover outlook, and fantasy streaming viability.",
+  "injuryStatus": "Healthy" | "Minor / Probable" | "Questionable" | "Elevated Risk" | "Key Defensive Injuries",
+  "draftSentiment": "RISING" | "FALLING" | "NEUTRAL",
+  "auctionAdvice": "One actionable tactical sentence on whether to pay up for this defense ($1-$3 range) or stream.",
+  "source": "Primary defensive beat reporter or analyst name",
+  "confidence": "HIGH" | "MEDIUM"
+}
+`;
+    } else if (player.pos === 'K') {
+      prompt = `
+You are a real-time fantasy football kicking specialist and auction draft analyst.
+Analyze the NFL starting kicker: ${player.name} (${player.pos}, ${player.team}).
+Search for the most recent news, field goal accuracy from 50+ yards, preseason kicking competitions, offensive drive volume, indoor dome advantage, and injury health for kicker ${player.name} on the ${player.team}.
+
+Return ONLY a valid JSON object matching this schema (no markdown code blocks, pure JSON):
+{
+  "headline": "Short kicker headline (max 12 words)",
+  "summary": "2-3 concise sentences detailing their leg range, indoor stadium factors, offensive scoring environment, and job security.",
+  "injuryStatus": "Healthy" | "Minor / Probable" | "Questionable" | "Out / IR",
+  "draftSentiment": "RISING" | "FALLING" | "NEUTRAL",
+  "auctionAdvice": "One actionable tactical sentence on how to price this kicker in a $200 auction draft ($1-$3 range).",
+  "source": "Primary news source or reporter name",
+  "confidence": "HIGH" | "MEDIUM"
+}
+`;
+    } else {
+      prompt = `
 You are a real-time fantasy football injury expert and high-stakes auction draft analyst.
 Analyze NFL player: ${player.name} (${player.pos}, ${player.team}).
 PRIORITY #1: Verify player health, active injuries, training camp/practice participation status (Full, Limited, DNP), surgeries, and soft tissue injury risks (hamstring, calf, groin, knee, ankle, shoulder).
@@ -331,6 +367,7 @@ Return ONLY a valid JSON object matching this schema (no markdown code blocks, p
   "confidence": "HIGH" | "MEDIUM"
 }
 `;
+    }
 
     const makeRequestBody = (includeSearch = true) => {
       const body = {
