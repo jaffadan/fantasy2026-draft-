@@ -2154,6 +2154,16 @@ export class AuctionDraftApp {
     const statusEl = document.getElementById('ollama-models-status');
     if (!select) return;
 
+    const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (!isLocalHost && this.gemini.provider !== 'local') {
+      select.innerHTML = `<option value="llama3.2:1b">llama3.2:1b (Local)</option>`;
+      if (statusEl) {
+        statusEl.textContent = 'Local Ollama is for offline/localhost use. Use Gemini Cloud for cloud hosting.';
+        statusEl.className = 'text-[10px] text-slate-500 mt-1';
+      }
+      return;
+    }
+
     const urlInput = document.getElementById('local-ai-url-input');
     const baseUrl = urlInput ? urlInput.value.trim() : this.gemini.localUrl;
     const currentModel = this.gemini.localModel;
