@@ -84,7 +84,7 @@ function readRequestBody(req) {
   });
 }
 
-const server = http.createServer(async (req, res) => {
+export default async function handler(req, res) {
   // CORS Pre-flight
   if (req.method === 'OPTIONS') {
     res.writeHead(204, {
@@ -351,12 +351,16 @@ Return ONLY a valid JSON object matching this schema (no markdown code blocks, p
       res.end(content, 'utf-8');
     }
   });
-});
+}
 
-server.listen(PORT, () => {
-  console.log(`================================================================`);
-  console.log(`  ⚡ 2026 Fantasy Football Auction Draft Command Center`);
-  console.log(`  🚀 Server running at: http://localhost:${PORT}`);
-  console.log(`  🔒 Auth Whitelist active: ${Array.from(ALLOWED_EMAILS).join(', ')}`);
-  console.log(`================================================================`);
-});
+// Standalone Server (Local / Non-Vercel)
+if (process.env.VERCEL !== '1') {
+  const server = http.createServer(handler);
+  server.listen(PORT, () => {
+    console.log(`================================================================`);
+    console.log(`  ⚡ 2026 Fantasy Football Auction Draft Command Center`);
+    console.log(`  🚀 Server running at: http://localhost:${PORT}`);
+    console.log(`  🔒 Auth Whitelist active: ${Array.from(ALLOWED_EMAILS).join(', ')}`);
+    console.log(`================================================================`);
+  });
+}
