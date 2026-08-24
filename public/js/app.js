@@ -909,17 +909,38 @@ export class AuctionDraftApp {
     container.innerHTML = players.map(p => {
       const dynVal = this.engine.getDynamicPlayerValue(p, inflation.inflationRate);
       return `
-        <div class="flex items-center justify-between p-2 rounded-xl bg-slate-900/60 border border-slate-800/60 hover:bg-slate-800/60 hover:border-slate-700 transition-all text-xs">
-          <div class="flex items-center gap-2.5 flex-1 min-w-0">
+        <div class="flex items-center justify-between p-2 rounded-xl bg-slate-900/60 border border-slate-800/60 hover:bg-slate-800/60 hover:border-slate-700 transition-all text-xs gap-2">
+          <div class="flex items-center gap-2.5 min-w-0 max-w-[200px] shrink-0">
             <button onclick="window.app.toggleStar('${p.id}')" class="${p.isStarred ? 'text-amber-400' : 'text-slate-600 hover:text-slate-400'} shrink-0">
               <i data-lucide="star" class="w-3.5 h-3.5 ${p.isStarred ? 'fill-current' : ''}"></i>
             </button>
             <span class="font-extrabold text-[10px] px-1.5 py-0.5 rounded badge-${p.pos.toLowerCase()} shrink-0">${p.pos}</span>
             <div class="truncate cursor-pointer hover:text-blue-400" onclick="window.app.openPlayerModal('${p.id}')">
               <span class="font-bold text-slate-200">${p.name}</span>
-              <span class="text-[10px] text-slate-400 ml-1.5">${p.team} • Bye ${p.bye || '-'}</span>
+              <span class="text-[10px] text-slate-400 ml-1">${p.team}</span>
             </div>
-            ${p.isRookie ? '<span class="text-[9px] px-1 bg-amber-500/20 text-amber-300 rounded shrink-0">R</span>' : ''}
+            ${p.isRookie ? '<span class="text-[9px] px-1 bg-amber-500/20 text-amber-300 rounded shrink-0 font-bold">R</span>' : ''}
+          </div>
+
+          <!-- 5-10 Word AI Intel / Buzz Snippet -->
+          <div class="flex-1 min-w-0 hidden sm:flex items-center px-1">
+            ${(() => {
+              const cached = this.gemini.getCachedNews(p.id, p.name);
+              if (cached && (cached.headline || cached.auctionAdvice || cached.summary)) {
+                const text = cached.headline || cached.auctionAdvice || cached.summary;
+                const isInj = cached.injuryStatus && (cached.injuryStatus.toLowerCase().includes('out') || cached.injuryStatus.toLowerCase().includes('ir') || cached.injuryStatus.toLowerCase().includes('elevated') || cached.injuryStatus.toLowerCase().includes('quest') || cached.injuryStatus.toLowerCase().includes('risk'));
+                return `
+                  <span class="text-[11px] ${isInj ? 'text-rose-300 font-semibold' : 'text-indigo-300'} truncate flex items-center gap-1.5" title="${text}">
+                    <i data-lucide="${isInj ? 'alert-triangle' : 'sparkles'}" class="w-3.5 h-3.5 shrink-0 ${isInj ? 'text-rose-400' : 'text-indigo-400'}"></i>
+                    <span class="truncate italic">${text}</span>
+                  </span>
+                `;
+              }
+              if (p.notes) {
+                return `<span class="text-[11px] text-slate-400 italic truncate" title="${p.notes}">${p.notes}</span>`;
+              }
+              return `<span class="text-[10px] text-slate-600 italic">Tier ${p.tier} • Pos Rank #${p.posRank}</span>`;
+            })()}
           </div>
 
           <div class="flex items-center gap-3 shrink-0">
@@ -1740,7 +1761,7 @@ export class AuctionDraftApp {
           <div class="flex items-center justify-between">
             <span class="text-slate-400">Health & Injury Status:</span>
             ${(() => {
-              const cached = this.gemini.getCachedNews(player.id);
+              const cached = this.gemini.getCachedNews(player.id, player.name);
               const inj = (cached && cached.injuryStatus) ? cached.injuryStatus : (player.injury || 'Healthy');
               const isInj = inj.toLowerCase().includes('out') || inj.toLowerCase().includes('ir') || inj.toLowerCase().includes('elevated') || inj.toLowerCase().includes('quest') || inj.toLowerCase().includes('risk');
               return isInj 
@@ -1756,8 +1777,25 @@ export class AuctionDraftApp {
         </div>
 
         ${(() => {
-          const cached = this.gemini.getCachedNews(player.id);
-          if (!cached) return '';
+          const cached = this.gemini.getCachedNews(player.id, player.name);
+          if (!cached) {
+            // If AI is configured, trigger automatic fetch for this player when opened!
+            if (this.gemini.isConfigured() && !this.gemini.isCircuitBroken) {
+              setTimeout(() => {
+                this.gemini.fetchPlayerNews(player, false).then(() => {
+                  const modal = document.getElementById('player-detail-modal');
+                  if (modal && !modal.classList.contains('hidden')) {
+                    this.openPlayerModal(player.id);
+                  }
+                }).catch(() => {});
+              }, 10);
+            }
+            return `
+              <div class="p-3 rounded-xl bg-indigo-950/20 border border-indigo-500/20 text-xs flex items-center justify-between text-indigo-300">
+                <span class="flex items-center gap-1.5"><i data-lucide="sparkles" class="w-3.5 h-3.5 text-indigo-400 animate-spin"></i> Loading AI Scout & Beat Wire...</span>
+              </div>
+            `;
+          }
           const isInj = cached.injuryStatus && (cached.injuryStatus.toLowerCase().includes('out') || cached.injuryStatus.toLowerCase().includes('ir') || cached.injuryStatus.toLowerCase().includes('elevated') || cached.injuryStatus.toLowerCase().includes('quest') || cached.injuryStatus.toLowerCase().includes('risk'));
           return `
             <div class="p-3.5 rounded-xl ${isInj ? 'bg-rose-950/40 border border-rose-600/50' : 'bg-indigo-950/30 border border-indigo-500/30'} text-xs space-y-1.5">

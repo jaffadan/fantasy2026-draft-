@@ -217,14 +217,34 @@ export class GeminiNewsService {
     return Boolean(this.apiKey && this.apiKey.length > 5);
   }
 
-  getCachedNews(playerId) {
-    const item = this.cache[playerId];
-    if (!item) return null;
-    // Cache valid for 30 minutes
-    if (Date.now() - item.timestamp < 30 * 60 * 1000) {
-      return item.data;
+  getCachedNews(playerId, playerName = null) {
+    if (!playerId && !playerName) return null;
+
+    // 1. Direct ID lookup
+    let item = this.cache[playerId];
+
+    // 2. Lookup by clean name slug
+    if (!item && playerName) {
+      const cleanSlug = playerName.toLowerCase().replace(/[^a-z0-9]/g, '');
+      item = this.cache[cleanSlug] || this.cache[playerName] || this.cache[playerName.toLowerCase()];
     }
-    return null;
+
+    // 3. Fallback scan by playerName
+    if (!item && playerName) {
+      const pNameLower = playerName.toLowerCase().trim();
+      for (const k of Object.keys(this.cache)) {
+        const entry = this.cache[k];
+        if (entry?.data?.playerName && entry.data.playerName.toLowerCase().trim() === pNameLower) {
+          item = entry;
+          break;
+        }
+      }
+    }
+
+    if (!item || !item.data) return null;
+
+    // Return cached intel (valid across draft day)
+    return item.data;
   }
 
   setServerKeyConfigured(hasKey) {
