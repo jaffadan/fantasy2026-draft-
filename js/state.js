@@ -4,6 +4,7 @@
  */
 
 import { DraftEngine } from './engine.js';
+import { defaultData } from '../data/default_data.js?v=2026.5';
 
 const STORAGE_KEY = 'fantasy_auction_draft_state_v1';
 
@@ -15,7 +16,7 @@ export class DraftStore {
 
   init() {
     const saved = localStorage.getItem(STORAGE_KEY);
-    const initialData = window.INITIAL_DRAFT_DATA || { rules: { defaultTeams: [] }, players: [], rookies: [] };
+    const initialData = defaultData || window.INITIAL_DRAFT_DATA || { rules: { defaultTeams: [] }, players: [], rookies: [] };
 
     if (saved) {
       try {

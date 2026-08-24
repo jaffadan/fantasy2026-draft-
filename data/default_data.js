@@ -3,7 +3,7 @@
  * Contains all 32 NFL Teams, 344 Player Projections, and 35 Top Rookies
  */
 
-export const defaultData = {
+const defaultData = {
   "rules": {
     "leagueName": "2026 Championship Auction League",
     "totalTeams": 12,
@@ -8122,3 +8122,9 @@ export const defaultData = {
     }
   ]
 };
+
+if (typeof window !== 'undefined') {
+  window.INITIAL_DRAFT_DATA = defaultData;
+}
+
+export { defaultData };

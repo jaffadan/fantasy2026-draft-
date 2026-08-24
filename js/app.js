@@ -1,9 +1,10 @@
-import { DraftStore } from './state.js?v=2026.4';
-import { DraftEngine } from './engine.js?v=2026.4';
-import { SheetSync } from './sheets_sync.js?v=2026.4';
-import { GeminiNewsService } from './gemini_news.js?v=2026.4';
-import { AuthService } from './auth.js?v=2026.4';
-import { FirestoreSyncService } from './firestore_sync.js?v=2026.4';
+import { DraftStore } from './state.js?v=2026.5';
+import { DraftEngine } from './engine.js?v=2026.5';
+import { SheetSync } from './sheets_sync.js?v=2026.5';
+import { GeminiNewsService } from './gemini_news.js?v=2026.5';
+import { AuthService } from './auth.js?v=2026.5';
+import { FirestoreSyncService } from './firestore_sync.js?v=2026.5';
+import { defaultData } from '../data/default_data.js?v=2026.5';
 
 export class AuctionDraftApp {
   constructor() {
@@ -2623,7 +2624,7 @@ export class AuctionDraftApp {
   }
 
   forcePushDatasetToCloud() {
-    const initialData = window.INITIAL_DRAFT_DATA;
+    const initialData = defaultData || window.INITIAL_DRAFT_DATA;
     if (!initialData || !initialData.players) {
       this.showToast('Seed database not found.', 'error');
       return;
