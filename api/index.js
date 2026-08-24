@@ -95,7 +95,8 @@ export default async function handler(req, res) {
     res.end(JSON.stringify({
       success: true,
       googleClientId: GOOGLE_CLIENT_ID,
-      allowedEmails: Array.from(ALLOWED_EMAILS)
+      allowedEmails: Array.from(ALLOWED_EMAILS),
+      hasServerGeminiKey: Boolean(process.env.GEMINI_API_KEY)
     }));
     return;
   }
@@ -197,15 +198,16 @@ export default async function handler(req, res) {
   // 6. Gemini Player News
   if (url.includes('/api/player-news')) {
     try {
+      const user = getAuthenticatedUser(req);
       const urlObj = new URL(url, 'http://localhost');
       const playerName = urlObj.searchParams.get('player');
       const pos = urlObj.searchParams.get('pos') || '';
       const team = urlObj.searchParams.get('team') || '';
-      const apiKey = urlObj.searchParams.get('apiKey') || process.env.GEMINI_API_KEY;
+      const apiKey = process.env.GEMINI_API_KEY || urlObj.searchParams.get('apiKey');
 
       if (!apiKey) {
         res.writeHead(400, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
-        res.end(JSON.stringify({ success: false, error: 'NO_API_KEY' }));
+        res.end(JSON.stringify({ success: false, error: 'NO_API_KEY', message: 'No Gemini API key configured on server or client.' }));
         return;
       }
 

@@ -53,6 +53,10 @@ export class AuctionDraftApp {
     // Register Auth listener
     this.auth.onAuthStateChanged((isAuthenticated, user) => {
       this.handleAuthStateChange(isAuthenticated, user);
+      if (this.auth.hasServerGeminiKey) {
+        this.gemini.setServerKeyConfigured(true);
+        this.updateGeminiStatusUI();
+      }
       if (isAuthenticated && user) {
         this.sync.init(this.store, this.gemini, user);
       }

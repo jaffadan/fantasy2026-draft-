@@ -45,6 +45,7 @@ export class AuthService {
         if (configData.allowedEmails && Array.isArray(configData.allowedEmails)) {
           this.allowedEmails = configData.allowedEmails;
         }
+        this.hasServerGeminiKey = Boolean(configData.hasServerGeminiKey);
       }
     } catch (e) {
       console.warn('Could not fetch /api/auth/config, using client defaults', e);

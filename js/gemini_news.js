@@ -227,9 +227,13 @@ export class GeminiNewsService {
     return null;
   }
 
+  setServerKeyConfigured(hasKey) {
+    this.hasServerKey = Boolean(hasKey);
+  }
+
   isConfigured() {
     if (this.provider === 'local') return true;
-    return this.hasApiKey();
+    return Boolean(this.apiKey) || Boolean(this.hasServerKey);
   }
 
   /**
@@ -259,7 +263,8 @@ export class GeminiNewsService {
 
     // Try backend proxy endpoint first if available, otherwise direct Gemini API
     try {
-      const proxyRes = await fetch(`/api/player-news?player=${encodeURIComponent(player.name)}&pos=${player.pos}&team=${player.team}&apiKey=${encodeURIComponent(this.apiKey)}`);
+      const apiKeyParam = this.apiKey ? `&apiKey=${encodeURIComponent(this.apiKey)}` : '';
+      const proxyRes = await fetch(`/api/player-news?player=${encodeURIComponent(player.name)}&pos=${player.pos}&team=${player.team}${apiKeyParam}`);
       if (proxyRes.ok) {
         const json = await proxyRes.json();
         if (json.success && json.data) {
