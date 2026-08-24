@@ -328,7 +328,11 @@ Return ONLY a valid JSON object matching this schema (no markdown code blocks, p
   }
 
   // --- STATIC FILE SERVING ---
-  let filePath = path.join(__dirname, req.url === '/' ? 'index.html' : req.url.split('?')[0]);
+  let reqPath = req.url === '/' ? 'index.html' : req.url.split('?')[0];
+  let filePath = path.join(__dirname, reqPath);
+  if (!fs.existsSync(filePath)) {
+    filePath = path.join(__dirname, 'public', reqPath);
+  }
   const ext = path.extname(filePath).toLowerCase();
   const contentType = MIME_TYPES[ext] || 'application/octet-stream';
 
