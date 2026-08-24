@@ -427,14 +427,6 @@ if __name__ == '__main__':
         print("  🔄 Auto-restart enabled: Server will reload on code changes")
         print("================================================================")
         
-        # Open in default browser on first launch
-        if "--no-browser" not in sys.argv and "RELOADED" not in os.environ:
-            os.environ["RELOADED"] = "1"
-            try:
-                webbrowser.open(url)
-            except Exception:
-                pass
-        
         # Start file watcher in background thread
         initial_mtimes = get_file_mtimes()
         watcher_thread = threading.Thread(target=watch_files_and_restart, args=(httpd, initial_mtimes), daemon=True)
