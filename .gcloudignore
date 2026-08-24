@@ -1,0 +1,8 @@
+.git
+.gitignore
+node_modules
+__pycache__
+*.pyc
+*.bat
+*.ps1
+.system_generated/

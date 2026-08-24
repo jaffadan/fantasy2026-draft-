@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: fantasy2026-draft
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: GOOGLE_CLIENT_ID
+        value: 816919087026-400mjujbr7cklrmbulggu1jhf0jf03o5.apps.googleusercontent.com
+      - key: NODE_ENV
+        value: production
