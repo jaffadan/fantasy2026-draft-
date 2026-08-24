@@ -3,6 +3,7 @@ import { DraftEngine } from './engine.js?v=2026.4';
 import { SheetSync } from './sheets_sync.js?v=2026.4';
 import { GeminiNewsService } from './gemini_news.js?v=2026.4';
 import { AuthService } from './auth.js?v=2026.4';
+import { FirestoreSyncService } from './firestore_sync.js?v=2026.4';
 
 export class AuctionDraftApp {
   constructor() {
@@ -11,6 +12,10 @@ export class AuctionDraftApp {
     this.sheetSync = new SheetSync(this.store);
     this.gemini = new GeminiNewsService();
     this.auth = new AuthService();
+    this.sync = new FirestoreSyncService();
+
+    this.store.setSyncService(this.sync);
+    this.gemini.setSyncService(this.sync);
 
     this.tableSort = { column: 'rank', asc: true };
     this.quickPosFilter = 'ALL';
@@ -35,9 +40,22 @@ export class AuctionDraftApp {
     this.bindEvents();
     this.updateGeminiStatusUI();
 
+    // Register Firestore Real-Time Cloud Sync
+    this.sync.onStatusChange((status) => {
+      this.updateCloudSyncUI(status);
+    });
+
+    this.sync.onRemoteAction((action) => {
+      const sender = action.user ? action.user.split('@')[0] : 'Partner';
+      this.showToast(`⚡ ${sender}: ${action.action}`, 'info');
+    });
+
     // Register Auth listener
     this.auth.onAuthStateChanged((isAuthenticated, user) => {
       this.handleAuthStateChange(isAuthenticated, user);
+      if (isAuthenticated && user) {
+        this.sync.init(this.store, this.gemini, user);
+      }
     });
     this.auth.init();
 
@@ -60,6 +78,30 @@ export class AuctionDraftApp {
     this.render();
   }
 
+  updateCloudSyncUI(status) {
+    const badge = document.getElementById('cloud-sync-status-badge');
+    const ping = document.getElementById('cloud-sync-ping');
+    const dot = document.getElementById('cloud-sync-dot');
+    const label = document.getElementById('cloud-sync-label');
+    if (!badge || !dot) return;
+
+    if (status.isConnected) {
+      if (status.isSyncing) {
+        dot.className = 'relative inline-flex rounded-full h-2 w-2 bg-amber-400';
+        if (ping) ping.className = 'animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75';
+        if (label) label.textContent = 'Syncing...';
+      } else {
+        dot.className = 'relative inline-flex rounded-full h-2 w-2 bg-emerald-400';
+        if (ping) ping.className = 'animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75';
+        if (label) label.textContent = 'Live Cloud Sync';
+      }
+    } else {
+      dot.className = 'relative inline-flex rounded-full h-2 w-2 bg-slate-500';
+      if (ping) ping.className = 'hidden';
+      if (label) label.textContent = 'Offline (Local)';
+    }
+  }
+
   handleAuthStateChange(isAuthenticated, user) {
     const lockOverlay = document.getElementById('auth-lock-overlay');
     const userProfile = document.getElementById('header-user-profile');
@@ -73,6 +115,7 @@ export class AuctionDraftApp {
     }
 
     if (isAuthenticated && user) {
+      this.sync.setUser(user);
       if (lockOverlay) lockOverlay.classList.add('hidden');
       if (userProfile) {
         userProfile.classList.remove('hidden');

@@ -51,6 +51,9 @@
   </script>
   <!-- Google Identity Services (OAuth 2.0) -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <!-- Google Firebase SDK (Real-Time Cloud Database & 2-Laptop Sync) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="stylesheet" href="css/styles.css" />
@@ -177,6 +180,15 @@
           <button id="btn-open-sync-modal" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-blue-300 rounded-xl text-xs border border-slate-700 transition-all" title="Google Sheets & CSV Sync">
             <i data-lucide="refresh-cw" class="w-4 h-4"></i>
           </button>
+
+          <!-- Real-Time Cloud Sync Indicator -->
+          <div id="cloud-sync-status-badge" class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-800/80 border border-slate-700/60 text-[11px] font-mono shadow-sm" title="Google Firestore Real-Time 2-Laptop Sync">
+            <span id="cloud-sync-pulse" class="relative flex h-2 w-2">
+              <span id="cloud-sync-ping" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span id="cloud-sync-dot" class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span id="cloud-sync-label" class="text-slate-300 font-bold hidden xl:inline">Live Cloud Sync</span>
+          </div>
 
           <!-- Authenticated User Profile & Logout -->
           <div id="header-user-profile" class="hidden items-center gap-2 pl-2 border-l border-slate-800">

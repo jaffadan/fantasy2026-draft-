@@ -32,6 +32,11 @@ export class GeminiNewsService {
     this.onProgressCallback = null;
     this.activityLog = []; // Live stream of AI pulls
     this.latencies = [];
+    this.syncService = null;
+  }
+
+  setSyncService(syncService) {
+    this.syncService = syncService;
   }
 
   logActivity(entry) {
@@ -262,6 +267,9 @@ export class GeminiNewsService {
           this.isCircuitBroken = false;
           this.cache[player.id] = { timestamp: Date.now(), data: json.data };
           this.saveCache();
+          if (this.syncService && typeof this.syncService.saveAiPlayerIntel === 'function') {
+            this.syncService.saveAiPlayerIntel(player.id, json.data);
+          }
           return json.data;
         } else if (json.error === 'NO_API_KEY') {
           throw new Error('NO_API_KEY');
@@ -389,6 +397,10 @@ Return ONLY a valid JSON object matching this schema (no markdown code blocks, p
       data: successfulJson
     };
     this.saveCache();
+
+    if (this.syncService && typeof this.syncService.saveAiPlayerIntel === 'function') {
+      this.syncService.saveAiPlayerIntel(player.id, successfulJson);
+    }
 
     this.logActivity({
       timestamp: new Date().toLocaleTimeString(),

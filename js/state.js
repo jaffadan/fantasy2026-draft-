@@ -128,12 +128,48 @@ export class DraftStore {
     this.save();
   }
 
-  save() {
+  setSyncService(syncService) {
+    this.syncService = syncService;
+  }
+
+  mergeRemoteState(remoteState) {
+    if (!remoteState) return;
+
+    const localTab = this.state?.activeTab;
+    const localSearch = this.state?.searchQuery;
+    const localTargetFilter = this.state?.targetFilter;
+    const localStatusFilter = this.state?.statusFilter;
+
+    this.state = {
+      ...remoteState,
+      activeTab: localTab || remoteState.activeTab || 'draft-room',
+      searchQuery: localSearch !== undefined ? localSearch : (remoteState.searchQuery || ''),
+      targetFilter: localTargetFilter || remoteState.targetFilter || 'ALL',
+      statusFilter: localStatusFilter || remoteState.statusFilter || 'ALL'
+    };
+
+    this.engine = new DraftEngine(this.state.rules, this.state.players, this.state.teams);
+
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.state));
+    } catch (e) {
+      console.error('Error saving merged remote state to localStorage', e);
+    }
+
+    this.notify();
+  }
+
+  save(actionDescription = 'Draft update') {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(this.state));
     } catch (e) {
       console.error('Error saving draft state to localStorage', e);
     }
+
+    if (this.syncService && typeof this.syncService.pushDraftState === 'function') {
+      this.syncService.pushDraftState(this.state, actionDescription);
+    }
+
     this.notify();
   }
 
