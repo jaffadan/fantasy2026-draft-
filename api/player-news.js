@@ -41,9 +41,7 @@ Return ONLY a valid JSON object matching this schema (no markdown code blocks, p
 
     const modelsToTry = [
       { model: 'gemini-3.7-flash', search: true },
-      { model: 'gemini-2.5-flash', search: true },
-      { model: 'gemini-3.7-flash', search: false },
-      { model: 'gemini-2.5-flash', search: false }
+      { model: 'gemini-3.7-flash', search: false }
     ];
 
     let lastError = null;

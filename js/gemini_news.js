@@ -18,7 +18,7 @@ export class GeminiNewsService {
     this.localModel = localStorage.getItem(LOCAL_AI_MODEL_STORAGE) || 'llama3.2:1b';
     this.cache = this.loadCache();
     this.model = 'gemini-3.7-flash';
-    this.fallbackModel = 'gemini-2.5-flash';
+    this.fallbackModel = 'gemini-3.7-flash';
     this.consecutiveFailures = 0;
     this.maxFailures = 3;
     this.isCircuitBroken = false;
@@ -307,9 +307,7 @@ Return ONLY a valid JSON object matching this schema (no markdown code blocks, p
 
     const modelsToTry = [
       { model: 'gemini-3.7-flash', search: true },
-      { model: 'gemini-2.5-flash', search: true },
-      { model: 'gemini-3.7-flash', search: false },
-      { model: 'gemini-2.5-flash', search: false }
+      { model: 'gemini-3.7-flash', search: false }
     ];
 
     let lastError = null;
