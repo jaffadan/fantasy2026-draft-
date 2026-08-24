@@ -1168,11 +1168,75 @@
     </div>
   </div>
 
+  <!-- ========================================== -->
+  <!-- REAL-TIME PARTNER DRAFT CHAT TOAST WIDGET -->
+  <!-- ========================================== -->
+  <div id="partner-chat-container" class="fixed bottom-4 left-4 z-40 flex flex-col items-start transition-all duration-300 max-w-sm w-[92vw] sm:w-84">
+    
+    <!-- Expanded Chat Card -->
+    <div id="partner-chat-expanded" class="w-full bg-slate-900/95 backdrop-blur-xl border border-indigo-500/40 rounded-2xl shadow-2xl overflow-hidden flex flex-col transition-all duration-300">
+      
+      <!-- Chat Header -->
+      <div class="px-3.5 py-2 bg-gradient-to-r from-slate-900 via-indigo-950/60 to-slate-900 border-b border-indigo-500/20 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div class="relative">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 block animate-pulse"></span>
+          </div>
+          <span class="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+            <i data-lucide="message-square" class="w-3.5 h-3.5 text-indigo-400"></i> Partner Draft Chat
+          </span>
+        </div>
+        <div class="flex items-center gap-1">
+          <button onclick="window.app.toggleChatMinimize(true)" title="Minimize Chat" class="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors">
+            <i data-lucide="minus" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Chat Messages Feed (Shows Last 4 Messages) -->
+      <div id="partner-chat-feed" class="p-3 space-y-2 max-h-48 overflow-y-auto text-xs">
+        <div class="text-[11px] text-slate-500 text-center italic py-2">
+          Real-time chat connected. Say hi to your partner! 🏈
+        </div>
+      </div>
+
+      <!-- Chat Input Form -->
+      <form id="partner-chat-form" onsubmit="window.app.handleSendChatMessage(event)" class="p-2 bg-slate-950/80 border-t border-slate-800/80 flex items-center gap-1.5">
+        <input 
+          type="text" 
+          id="partner-chat-input" 
+          placeholder="Message partner (Enter to send)..." 
+          maxlength="200"
+          autocomplete="off"
+          class="flex-1 bg-slate-900 border border-slate-700/70 rounded-xl px-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-all"
+        />
+        <button type="submit" class="px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-bold rounded-xl shadow-md transition-all shrink-0">
+          <i data-lucide="send" class="w-3 h-3"></i>
+        </button>
+      </form>
+    </div>
+
+    <!-- Minimized Pill Button -->
+    <button 
+      id="partner-chat-minimized" 
+      onclick="window.app.toggleChatMinimize(false)" 
+      class="hidden items-center gap-2 px-3.5 py-2 bg-slate-900/95 backdrop-blur-xl hover:bg-slate-800 border border-indigo-500/40 hover:border-indigo-400/60 rounded-full shadow-xl text-slate-200 text-xs font-bold transition-all group"
+    >
+      <div class="relative flex items-center">
+        <i data-lucide="message-square" class="w-4 h-4 text-indigo-400 group-hover:scale-110 transition-transform"></i>
+        <span id="partner-chat-unread-dot" class="hidden absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-rose-500 border-2 border-slate-900"></span>
+      </div>
+      <span>Partner Chat</span>
+      <span id="partner-chat-latest-preview" class="text-[10px] text-slate-400 max-w-[120px] truncate hidden font-normal"></span>
+    </button>
+
+  </div>
+
   <!-- TOAST NOTIFICATION CONTAINER -->
   <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2 pointer-events-none"></div>
 
   <!-- Main Application Entry Module -->
-  <script type="module" src="js/app.js?v=2026.6"></script>
+  <script type="module" src="js/app.js?v=2026.7"></script>
 
 </body>
 </html>

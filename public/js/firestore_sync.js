@@ -31,10 +31,16 @@ export class FirestoreSyncService {
     this.currentUser = null;
     this.stateUnsubscribe = null;
     this.aiCacheUnsubscribe = null;
+    this.chatUnsubscribe = null;
     this.statusCallbacks = [];
     this.remoteActionCallbacks = [];
+    this.chatCallbacks = [];
     this.lastLocalWriteTimestamp = 0;
     this.localWriteLockDuration = 800; // Ignore echo snapshots for 800ms
+  }
+
+  onChatMessage(callback) {
+    this.chatCallbacks.push(callback);
   }
 
   onStatusChange(callback) {
@@ -108,6 +114,7 @@ export class FirestoreSyncService {
       // Start Real-Time Listeners
       this.listenToDraftState();
       this.listenToAiCache();
+      this.listenToChat();
 
       // Upload any local AI cache to Cloud DB so other laptop gets it
       this.syncLocalAiCacheToCloud();
@@ -308,6 +315,55 @@ export class FirestoreSyncService {
       } catch (e) {
         console.warn('⚡ [Firestore Sync] Batch AI sync warning:', e);
       }
+    }
+  }
+
+  /**
+   * Listen to real-time chat messages between partners
+   */
+  listenToChat() {
+    if (!this.db) return;
+    const chatCol = this.db.collection('leagues').doc('2026_draft').collection('chat_messages');
+
+    this.chatUnsubscribe = chatCol.orderBy('timestamp', 'desc').limit(20).onSnapshot((snapshot) => {
+      const messages = [];
+      snapshot.forEach((doc) => {
+        messages.push({ id: doc.id, ...doc.data() });
+      });
+      // Sort ascending (oldest to newest for feed display)
+      messages.sort((a, b) => a.timestamp - b.timestamp);
+
+      for (const cb of this.chatCallbacks) {
+        try {
+          cb(messages);
+        } catch (e) {
+          console.error('Chat callback error:', e);
+        }
+      }
+    }, (error) => {
+      console.warn('⚡ [Firestore Sync] Chat listener warning:', error);
+    });
+  }
+
+  /**
+   * Send a real-time chat message to partner
+   */
+  async sendChatMessage(text) {
+    if (!this.db || !text || !text.trim()) return false;
+    try {
+      const userEmail = this.currentUser ? this.currentUser.email : 'jaffadan@gmail.com';
+      const displayName = userEmail.toLowerCase().includes('tracy') ? 'Tracy' : 'Dan';
+      const chatCol = this.db.collection('leagues').doc('2026_draft').collection('chat_messages');
+      await chatCol.add({
+        sender: userEmail,
+        displayName: displayName,
+        text: text.trim(),
+        timestamp: Date.now()
+      });
+      return true;
+    } catch (e) {
+      console.error('⚡ [Firestore Sync] Failed to send chat message:', e);
+      return false;
     }
   }
 

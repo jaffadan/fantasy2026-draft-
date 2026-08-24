@@ -24,6 +24,11 @@ export class AuctionDraftApp {
     this.activeNominationNews = null;
     this.isLoadingNews = false;
 
+    // Real-Time Partner Chat State
+    this.chatMessages = [];
+    this.isChatMinimized = false;
+    this.unreadChatCount = 0;
+
     this.init();
   }
 
@@ -49,6 +54,11 @@ export class AuctionDraftApp {
     this.sync.onRemoteAction((action) => {
       const sender = action.user ? action.user.split('@')[0] : 'Partner';
       this.showToast(`⚡ ${sender}: ${action.action}`, 'info');
+    });
+
+    // Register Real-Time Partner Chat Listener
+    this.sync.onChatMessage((messages) => {
+      this.handleIncomingChatMessages(messages);
     });
 
     // Register Auth listener
@@ -2957,6 +2967,135 @@ export class AuctionDraftApp {
       toast.classList.add('opacity-0', 'translate-y-2');
       setTimeout(() => toast.remove(), 300);
     }, 3000);
+  }
+
+  handleIncomingChatMessages(messages) {
+    if (!messages) return;
+    const prevCount = this.chatMessages.length;
+    const isNew = messages.length > prevCount;
+    this.chatMessages = messages;
+
+    if (isNew && prevCount > 0) {
+      const latestMsg = messages[messages.length - 1];
+      const currentUserEmail = (this.auth?.currentUser?.email || 'jaffadan@gmail.com').toLowerCase();
+      const isFromPartner = latestMsg.sender && latestMsg.sender.toLowerCase() !== currentUserEmail;
+
+      if (isFromPartner) {
+        if (this.isChatMinimized) {
+          this.unreadChatCount++;
+          this.showToast(`💬 ${latestMsg.displayName || 'Partner'}: "${latestMsg.text}"`, 'info');
+        }
+      }
+    }
+
+    this.renderChatWidget();
+  }
+
+  async handleSendChatMessage(e) {
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+    const input = document.getElementById('partner-chat-input');
+    if (!input) return;
+    const text = input.value.trim();
+    if (!text) return;
+
+    input.value = '';
+    const success = await this.sync.sendChatMessage(text);
+    if (!success) {
+      this.showToast('Failed to send message. Check cloud connection.', 'error');
+    }
+  }
+
+  toggleChatMinimize(minimized) {
+    this.isChatMinimized = (minimized !== undefined) ? minimized : !this.isChatMinimized;
+    if (!this.isChatMinimized) {
+      this.unreadChatCount = 0;
+    }
+    this.renderChatWidget();
+  }
+
+  renderChatWidget() {
+    const container = document.getElementById('partner-chat-container');
+    const expandedCard = document.getElementById('partner-chat-expanded');
+    const minimizedBtn = document.getElementById('partner-chat-minimized');
+    const feed = document.getElementById('partner-chat-feed');
+    const unreadDot = document.getElementById('partner-chat-unread-dot');
+    const previewSpan = document.getElementById('partner-chat-latest-preview');
+
+    if (!container || !expandedCard || !minimizedBtn || !feed) return;
+
+    if (this.isChatMinimized) {
+      expandedCard.classList.add('hidden');
+      minimizedBtn.classList.remove('hidden');
+      minimizedBtn.classList.add('flex');
+
+      if (this.unreadChatCount > 0) {
+        unreadDot?.classList.remove('hidden');
+      } else {
+        unreadDot?.classList.add('hidden');
+      }
+
+      if (this.chatMessages.length > 0) {
+        const last = this.chatMessages[this.chatMessages.length - 1];
+        if (previewSpan) {
+          previewSpan.textContent = ` - ${last.displayName || 'Partner'}: "${last.text}"`;
+          previewSpan.classList.remove('hidden');
+        }
+      }
+    } else {
+      expandedCard.classList.remove('hidden');
+      minimizedBtn.classList.add('hidden');
+      minimizedBtn.classList.remove('flex');
+      this.unreadChatCount = 0;
+      unreadDot?.classList.add('hidden');
+
+      // Render the LAST 4 MESSAGES
+      const recent4 = this.chatMessages.slice(-4);
+      if (recent4.length === 0) {
+        feed.innerHTML = `
+          <div class="text-[11px] text-slate-500 text-center italic py-2">
+            Real-time chat connected. Say hi to your partner! 🏈
+          </div>
+        `;
+      } else {
+        const currentUserEmail = (this.auth?.currentUser?.email || 'jaffadan@gmail.com').toLowerCase();
+        feed.innerHTML = recent4.map(msg => {
+          const isMe = msg.sender && msg.sender.toLowerCase() === currentUserEmail;
+          const timeStr = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
+          const name = msg.displayName || (isMe ? 'You' : 'Partner');
+          const isDan = name.toLowerCase().includes('dan') || (msg.sender && msg.sender.toLowerCase().includes('jaffadan'));
+
+          const badgeColor = isDan ? 'bg-blue-600/30 text-blue-300 border-blue-500/40' : 'bg-purple-600/30 text-purple-300 border-purple-500/40';
+          const bubbleBg = isMe ? 'bg-indigo-950/70 border-indigo-500/40 text-slate-100' : 'bg-slate-800/80 border-slate-700/60 text-slate-200';
+
+          return `
+            <div class="flex flex-col gap-0.5 ${isMe ? 'items-end' : 'items-start'}">
+              <div class="flex items-center gap-1.5 text-[10px] text-slate-400 px-1">
+                <span class="px-1.5 py-0.2 rounded border font-bold text-[9px] ${badgeColor}">${name}</span>
+                <span>${timeStr}</span>
+              </div>
+              <div class="px-2.5 py-1.5 rounded-xl border text-xs max-w-[90%] break-words shadow-sm ${bubbleBg}">
+                ${this.escapeHtml(msg.text || '')}
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        // Auto-scroll to bottom of feed
+        feed.scrollTop = feed.scrollHeight;
+      }
+    }
+
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  escapeHtml(str) {
+    if (!str) return '';
+    return str
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
   }
 }
 
