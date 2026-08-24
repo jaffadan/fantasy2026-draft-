@@ -176,12 +176,18 @@ export default async function handler(req, res) {
     return;
   }
 
-  // 5. Google Sheets Proxy
+  // 5. Sheets Sync Proxy
   if (url.includes('/api/sync-sheet')) {
     try {
       const sheetId = "1FHfpcyKwtGxmAhxD_e0qSfdEPtteVP-Ahb8B56nzxVQ";
       const mainRes = await fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=2026127503`);
       const rookieRes = await fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=1188258304`);
+
+      if (!mainRes.ok || !rookieRes.ok) {
+        res.writeHead(400, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: false, error: 'Failed to fetch Google Sheet. Please verify sheet is publicly published to web.' }));
+        return;
+      }
 
       const mainCsv = await mainRes.text();
       const rookieCsv = await rookieRes.text();
@@ -203,7 +209,16 @@ export default async function handler(req, res) {
       const playerName = urlObj.searchParams.get('player');
       const pos = urlObj.searchParams.get('pos') || '';
       const team = urlObj.searchParams.get('team') || '';
-      const apiKey = process.env.GEMINI_API_KEY || urlObj.searchParams.get('apiKey');
+      const clientApiKey = urlObj.searchParams.get('apiKey');
+
+      // Security: If not authenticated and no client key provided, block access
+      if (!user && !clientApiKey) {
+        res.writeHead(401, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: false, error: 'UNAUTHORIZED', message: 'Valid Google Auth session required to access server Gemini key.' }));
+        return;
+      }
+
+      const apiKey = process.env.GEMINI_API_KEY || clientApiKey;
 
       if (!apiKey) {
         res.writeHead(400, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });

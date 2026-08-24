@@ -4,11 +4,12 @@ export default async function handler(req, res) {
     const playerName = urlObj.searchParams.get('player');
     const pos = urlObj.searchParams.get('pos') || '';
     const team = urlObj.searchParams.get('team') || '';
-    const apiKey = process.env.GEMINI_API_KEY || urlObj.searchParams.get('apiKey');
+    const clientApiKey = urlObj.searchParams.get('apiKey');
+    const apiKey = process.env.GEMINI_API_KEY || clientApiKey;
 
     if (!apiKey) {
       res.writeHead(400, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
-      res.end(JSON.stringify({ success: false, error: 'NO_API_KEY', message: 'No Gemini API key configured on server.' }));
+      res.end(JSON.stringify({ success: false, error: 'NO_API_KEY', message: 'No Gemini API key configured on server or client.' }));
       return;
     }
 
