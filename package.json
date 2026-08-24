@@ -2,7 +2,6 @@
   "name": "Fantasy2026-Draft",
   "version": "1.0.0",
   "description": "Fantasy2026 Draft - Auction Command Center & Live Intelligence",
-  "main": "server.js",
   "type": "module",
   "scripts": {
     "start": "node server.js",
