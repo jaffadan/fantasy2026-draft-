@@ -355,6 +355,57 @@ Return ONLY a valid JSON object matching this schema (no markdown code blocks, p
     return;
   }
 
+  // --- CBS SPORTS FANTASY ENDPOINTS (VERCEL CLOUD HANDLER) ---
+
+  // 1. CBS Status check
+  if (url.includes('/api/cbs/status')) {
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+    res.end(JSON.stringify({
+      success: true,
+      hasSession: true,
+      hasData: true,
+      isVercel: true,
+      playwrightReady: false,
+      lastSynced: "2026-09-08T14:30:00Z"
+    }));
+    return;
+  }
+
+  // 2. CBS League Data
+  if (url.includes('/api/cbs/data')) {
+    try {
+      const fs = await import('fs');
+      const path = await import('path');
+      let dataPath = path.join(process.cwd(), 'data', 'cbs_league_data.json');
+      if (!fs.existsSync(dataPath)) {
+        dataPath = path.join(process.cwd(), 'public', 'data', 'cbs_league_data.json');
+      }
+      if (fs.existsSync(dataPath)) {
+        const raw = fs.readFileSync(dataPath, 'utf8');
+        res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: true, data: JSON.parse(raw) }));
+      } else {
+        res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: true, data: null }));
+      }
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ success: false, error: e.message }));
+    }
+    return;
+  }
+
+  // 3. CBS Sync / Login on Vercel
+  if (url.includes('/api/cbs/sync') || url.includes('/api/cbs/login')) {
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+    res.end(JSON.stringify({
+      success: false,
+      isVercel: true,
+      message: "Browser automation cannot launch from cloud servers. Please run login_cbs.bat or start.bat on your local machine to log in and sync live CBS data."
+    }));
+    return;
+  }
+
   res.writeHead(404, { 'Content-Type': 'text/plain' });
   res.end('Not Found');
 }

@@ -181,6 +181,12 @@ export class InSeasonModule {
 
   // --- SYNC ACTIONS ---
   async triggerLiveSync() {
+    const isCloud = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+    if (isCloud) {
+      alert("⚡ Live CBS Browser Scraping runs directly on your computer.\n\nTo sync live CBS data:\n1. On your computer, double-click 'sync_cbs.bat' (or run start.bat)\n2. It will scrape fresh rosters, matchups, and waivers and update your dashboard.");
+      return;
+    }
+
     this.isSyncing = true;
     this.render();
 
@@ -204,6 +210,12 @@ export class InSeasonModule {
   }
 
   async launchInteractiveLogin() {
+    const isCloud = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+    if (isCloud) {
+      alert("🌐 CBS Login Setup:\n\nBecause you are viewing the app on Vercel Cloud, cloud servers cannot open a browser on your personal computer.\n\nTo log in once and save your session:\n1. In your local project folder on your PC, double-click 'login_cbs.bat'\n2. A Chromium browser window will open for you to log into CBS\n3. Close the browser when done!");
+      return;
+    }
+
     try {
       const res = await fetch('/api/cbs/login', { method: 'POST' });
       const json = await res.json();
