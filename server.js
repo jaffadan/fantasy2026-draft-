@@ -378,16 +378,44 @@ Return ONLY a valid JSON object matching this schema (no markdown code blocks, p
     return;
   }
 
+  function getPythonExecutable() {
+    const candidates = [
+      'C:\\Users\\DanJaffa\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe',
+      'C:\\Users\\DanJaffa\\AppData\\Local\\Python\\bin\\python.exe',
+      'C:\\Users\\DanJaffa\\AppData\\Local\\Microsoft\\WindowsApps\\python.exe',
+      'python.exe',
+      'python',
+      'py'
+    ];
+    for (const c of candidates) {
+      try {
+        if (c.includes('\\') && fs.existsSync(c)) return c;
+      } catch (e) {}
+    }
+    return 'python';
+  }
+
   // 3. CBS Playwright Sync trigger
   if (req.url.startsWith('/api/cbs/sync') && req.method === 'POST') {
     try {
       const { spawn } = await import('child_process');
       const scriptPath = path.join(__dirname, 'scripts', 'cbs_sync.py');
-      const child = spawn('python', [scriptPath, '--sync']);
+      const pythonBin = getPythonExecutable();
+      const child = spawn(pythonBin, [scriptPath, '--sync'], { shell: true });
       let stdout = '';
       let stderr = '';
-      child.stdout.on('data', d => { stdout += d.toString(); });
-      child.stderr.on('data', d => { stderr += d.toString(); });
+      child.stdout?.on('data', d => { stdout += d.toString(); });
+      child.stderr?.on('data', d => { stderr += d.toString(); });
+
+      child.on('error', (err) => {
+        console.warn('[CBS] Playwright sync process error:', err.message);
+        res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({
+          success: false,
+          error: `Could not launch Python: ${err.message}. Try running sync_cbs.bat directly.`,
+          data: null
+        }));
+      });
 
       child.on('close', code => {
         let leagueData = null;
@@ -415,7 +443,13 @@ Return ONLY a valid JSON object matching this schema (no markdown code blocks, p
     try {
       const { spawn } = await import('child_process');
       const scriptPath = path.join(__dirname, 'scripts', 'cbs_sync.py');
-      spawn('python', [scriptPath, '--login'], { detached: true, stdio: 'ignore' }).unref();
+      const pythonBin = getPythonExecutable();
+      const child = spawn(pythonBin, [scriptPath, '--login'], { detached: true, shell: true, stdio: 'ignore' });
+      child.on('error', (err) => {
+        console.warn('[CBS] Interactive login spawn error:', err.message);
+      });
+      child.unref();
+
       res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
       res.end(JSON.stringify({
         success: true,
