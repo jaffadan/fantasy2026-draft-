@@ -244,21 +244,29 @@ export class FirestoreSyncService {
           const data = change.doc.data();
           if (data && data.intel) {
             const pName = data.playerName || data.intel.playerName || '';
-            const cleanSlug = pName ? pName.toLowerCase().replace(/[^a-z0-9]/g, '') : (data.playerId || '');
-            if (cleanSlug) {
-              if (!this.gemini.cache[cleanSlug]) {
-                newEntriesCount++;
-              }
-              const entry = {
-                timestamp: data.timestamp || Date.now(),
-                playerName: pName,
-                data: data.intel
-              };
-              this.gemini.cache[cleanSlug] = entry;
-              if (data.playerId && !data.playerId.startsWith('p_')) {
-                this.gemini.cache[data.playerId] = entry;
-              }
+            const docId = change.doc.id;
+
+            // Reject old legacy numerical entries (e.g. 'p_74') that lack verified player name
+            if (docId.startsWith('p_') && !pName) {
+              return;
             }
+
+            const cleanSlug = pName ? pName.toLowerCase().replace(/[^a-z0-9]/g, '') : (docId.startsWith('p_') ? null : docId);
+            if (!cleanSlug) return;
+
+            const entry = {
+              timestamp: data.timestamp || Date.now(),
+              playerName: pName,
+              data: {
+                ...data.intel,
+                playerName: pName
+              }
+            };
+
+            if (!this.gemini.cache[cleanSlug]) {
+              newEntriesCount++;
+            }
+            this.gemini.cache[cleanSlug] = entry;
           }
         }
       });

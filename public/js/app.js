@@ -2215,6 +2215,25 @@ export class AuctionDraftApp {
     this.showToast('Client key removed! App is now using secure Server Environment.', 'success');
   }
 
+  flushAndRescoutAllAi() {
+    this.gemini.cache = {};
+    try {
+      localStorage.removeItem('fantasy_draft_gemini_news_cache_v1');
+      localStorage.removeItem('fantasy_draft_gemini_news_cache_v2');
+      localStorage.removeItem('fantasy_draft_gemini_news_cache_v3_nameslug');
+    } catch (e) {}
+    this.gemini.resetFailures();
+    this.gemini.saveCache();
+
+    // Start fresh background prefetch for all 390 players
+    const allPlayers = this.store.state.players;
+    this.gemini.startBackgroundPrefetch(allPlayers, true, true);
+    this.showToast('⚡ Flushed AI cache! Freshly re-scouting all 390 players...', 'success');
+    this.closeModals();
+    this.updatePreloadUI(this.gemini.getPreloadedCount(allPlayers.length));
+    this.render();
+  }
+
   refreshDefenseAiIntel() {
     const dstPlayers = this.store.state.players.filter(p => p.pos === 'DST');
     if (dstPlayers.length === 0) {

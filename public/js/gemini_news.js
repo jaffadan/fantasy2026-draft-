@@ -8,7 +8,7 @@ const GEMINI_API_KEY_STORAGE = 'fantasy_draft_gemini_api_key';
 const AI_PROVIDER_STORAGE = 'fantasy_draft_ai_provider'; // 'gemini' or 'local'
 const LOCAL_AI_URL_STORAGE = 'fantasy_draft_local_ai_url'; // default 'http://localhost:11434'
 const LOCAL_AI_MODEL_STORAGE = 'fantasy_draft_local_ai_model'; // default 'llama3.2'
-const NEWS_CACHE_STORAGE = 'fantasy_draft_gemini_news_cache_v1';
+const NEWS_CACHE_STORAGE = 'fantasy_draft_gemini_news_cache_v3_nameslug';
 
 export class GeminiNewsService {
   constructor() {
@@ -193,26 +193,28 @@ export class GeminiNewsService {
 
   loadCache() {
     try {
+      localStorage.removeItem('fantasy_draft_gemini_news_cache_v1');
+      localStorage.removeItem('fantasy_draft_gemini_news_cache_v2');
+    } catch (e) {}
+
+    try {
       const saved = localStorage.getItem(NEWS_CACHE_STORAGE);
       const rawCache = saved ? JSON.parse(saved) : {};
       const cleanCache = {};
 
-      // Migrate cache to immutable clean name slugs and purge mismatched numerical ID entries
       for (const [key, val] of Object.entries(rawCache)) {
         if (!val || !val.data) continue;
         const pName = val.playerName || val.data.playerName;
         if (pName) {
           const slug = pName.toLowerCase().replace(/[^a-z0-9]/g, '');
           cleanCache[slug] = {
-            ...val,
+            timestamp: val.timestamp || Date.now(),
             playerName: pName,
             data: {
               ...val.data,
               playerName: pName
             }
           };
-        } else if (!key.startsWith('p_')) {
-          cleanCache[key] = val;
         }
       }
       return cleanCache;
