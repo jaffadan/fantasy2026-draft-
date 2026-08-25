@@ -29,29 +29,65 @@ def interactive_login():
     print('⚡ CBS Sports Fantasy - Interactive Login Session Setup')
     print('========================================================')
     print(f'Opening browser to: {LEAGUE_URL}')
-    print('Please log into your CBS Sports account in the browser.')
-    print('Once you are logged into your league page, close the browser or press Enter here.')
+    print('1. Log into your CBS Sports account in the browser window.')
+    print('2. Navigate to your league page (NEFJ BFFL).')
+    print('3. When you are done, simply close the browser window.')
     print('--------------------------------------------------------')
 
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=False)
-        context = browser.new_context()
+        browser = p.chromium.launch(headless=False, args=['--start-maximized'])
+        context = browser.new_context(no_viewport=True)
         page = context.new_page()
-        page.goto(LEAGUE_URL, timeout=60000)
 
-        # Poll until user is logged in or user presses Enter
         try:
-            print('Waiting for login... (Complete login in the popup window)')
-            # Wait up to 5 minutes for user interaction
-            page.wait_for_url('**/nefjbffl.football.cbssports.com/**', timeout=300000)
-            time.sleep(3)
+            page.goto(LEAGUE_URL, timeout=60000)
         except Exception as e:
-            print(f'Notice: {e}')
+            print(f'Initial load note: {e}')
 
-        # Save storage state (cookies + local storage)
-        context.storage_state(path=SESSION_FILE)
-        print(f'✅ Login session successfully saved to: {SESSION_FILE}')
-        browser.close()
+        print('Browser is open. Waiting for you to log in... (Close browser when finished)')
+        
+        # Keep open until user closes the window or timeout (15 mins)
+        start_time = time.time()
+        max_duration = 900  # 15 minutes
+        last_saved = 0
+
+        while time.time() - start_time < max_duration:
+            try:
+                # Check if all pages/windows are closed
+                if not context.pages:
+                    print('\nBrowser window closed by user.')
+                    break
+
+                # Periodically save state in case user logs in
+                if time.time() - last_saved > 3:
+                    try:
+                        context.storage_state(path=SESSION_FILE)
+                        # Also copy to public directory
+                        if os.path.exists(SESSION_FILE):
+                            public_session = os.path.join(os.path.dirname(__file__), '..', 'public', 'data', 'cbs_session.json')
+                            os.makedirs(os.path.dirname(public_session), exist_ok=True)
+                            with open(SESSION_FILE, 'r', encoding='utf-8') as src:
+                                with open(public_session, 'w', encoding='utf-8') as dst:
+                                    dst.write(src.read())
+                        last_saved = time.time()
+                    except Exception:
+                        pass
+
+                time.sleep(1)
+            except Exception:
+                break
+
+        # Final save before closing
+        try:
+            context.storage_state(path=SESSION_FILE)
+            print(f'✅ Login session successfully saved to: {SESSION_FILE}')
+        except Exception as e:
+            print(f'Final save note: {e}')
+
+        try:
+            browser.close()
+        except Exception:
+            pass
 
 def sync_league_data():
     from playwright.sync_api import sync_playwright

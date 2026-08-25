@@ -490,8 +490,13 @@ Return ONLY a valid JSON object matching this schema (no markdown code blocks, p
         try:
             import subprocess
             script_path = os.path.join(DIRECTORY, 'scripts', 'cbs_sync.py')
-            # Launch interactive login in separate thread/process so user can interact
-            threading.Thread(target=lambda: subprocess.run([sys.executable, script_path, '--login']), daemon=True).start()
+            
+            # Use CREATE_NEW_CONSOLE on Windows to ensure visible desktop window
+            creation_flags = 0
+            if sys.platform == 'win32' and hasattr(subprocess, 'CREATE_NEW_CONSOLE'):
+                creation_flags = subprocess.CREATE_NEW_CONSOLE
+
+            subprocess.Popen([sys.executable, script_path, '--login'], creationflags=creation_flags)
             
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
