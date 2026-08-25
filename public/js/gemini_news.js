@@ -194,7 +194,28 @@ export class GeminiNewsService {
   loadCache() {
     try {
       const saved = localStorage.getItem(NEWS_CACHE_STORAGE);
-      return saved ? JSON.parse(saved) : {};
+      const rawCache = saved ? JSON.parse(saved) : {};
+      const cleanCache = {};
+
+      // Migrate cache to immutable clean name slugs and purge mismatched numerical ID entries
+      for (const [key, val] of Object.entries(rawCache)) {
+        if (!val || !val.data) continue;
+        const pName = val.playerName || val.data.playerName;
+        if (pName) {
+          const slug = pName.toLowerCase().replace(/[^a-z0-9]/g, '');
+          cleanCache[slug] = {
+            ...val,
+            playerName: pName,
+            data: {
+              ...val.data,
+              playerName: pName
+            }
+          };
+        } else if (!key.startsWith('p_')) {
+          cleanCache[key] = val;
+        }
+      }
+      return cleanCache;
     } catch (e) {
       return {};
     }
@@ -222,27 +243,47 @@ export class GeminiNewsService {
     return Boolean(this.apiKey && this.apiKey.length > 5);
   }
 
-  getCachedNews(playerId, playerName = null) {
+  getCachedNews(playerIdOrPlayer, playerName = null) {
+    let playerId = playerIdOrPlayer;
+    if (typeof playerIdOrPlayer === 'object' && playerIdOrPlayer !== null) {
+      playerName = playerIdOrPlayer.name;
+      playerId = playerIdOrPlayer.id;
+    }
     if (!playerId && !playerName) return null;
 
-    // 1. Direct ID lookup
-    let item = this.cache[playerId];
+    const cleanSlug = playerName ? playerName.toLowerCase().replace(/[^a-z0-9]/g, '') : null;
 
-    // 2. Lookup by clean name slug
+    // 1. Primary lookup by unique clean name slug (100% IMMUTABLE across rank shifts)
+    let item = cleanSlug ? this.cache[cleanSlug] : null;
+
+    // 2. Direct string name lookups
     if (!item && playerName) {
-      const cleanSlug = playerName.toLowerCase().replace(/[^a-z0-9]/g, '');
-      item = this.cache[cleanSlug] || this.cache[playerName] || this.cache[playerName.toLowerCase()];
+      item = this.cache[playerName] || this.cache[playerName.toLowerCase()];
     }
 
-    // 3. Fallback scan by playerName
+    // 3. Fallback scan by matching playerName inside cached data
     if (!item && playerName) {
       const pNameLower = playerName.toLowerCase().trim();
       for (const k of Object.keys(this.cache)) {
         const entry = this.cache[k];
-        if (entry?.data?.playerName && entry.data.playerName.toLowerCase().trim() === pNameLower) {
+        const entryName = (entry?.playerName || entry?.data?.playerName || '').toLowerCase().trim();
+        if (entryName && entryName === pNameLower) {
           item = entry;
           break;
         }
+      }
+    }
+
+    // 4. Numeric ID check ONLY IF the stored entry strictly matches this player's name
+    if (!item && playerId && this.cache[playerId]) {
+      const entry = this.cache[playerId];
+      const entryName = (entry?.playerName || entry?.data?.playerName || '').toLowerCase().trim();
+      const targetName = (playerName || '').toLowerCase().trim();
+      if (!targetName || (entryName && entryName === targetName) || (cleanSlug && entryName.replace(/[^a-z0-9]/g, '') === cleanSlug)) {
+        item = entry;
+      } else {
+        // Mismatched ID from pre-expansion re-ranking -> discard stale numerical entry
+        delete this.cache[playerId];
       }
     }
 
@@ -268,7 +309,7 @@ export class GeminiNewsService {
     if (!player) return null;
 
     if (!forceRefresh) {
-      const cached = this.getCachedNews(player.id);
+      const cached = this.getCachedNews(player);
       if (cached) return { ...cached, isCached: true };
     }
 
@@ -295,12 +336,16 @@ export class GeminiNewsService {
         if (json.success && json.data) {
           this.consecutiveFailures = 0;
           this.isCircuitBroken = false;
-          this.cache[player.id] = { timestamp: Date.now(), data: json.data };
+          const cleanSlug = player.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+          const payload = { ...json.data, playerName: player.name };
+          const cacheEntry = { timestamp: Date.now(), playerName: player.name, data: payload };
+          this.cache[cleanSlug] = cacheEntry;
+          this.cache[player.id] = cacheEntry;
           this.saveCache();
           if (this.syncService && typeof this.syncService.saveAiPlayerIntel === 'function') {
-            this.syncService.saveAiPlayerIntel(player.id, json.data);
+            this.syncService.saveAiPlayerIntel(player, payload);
           }
-          return json.data;
+          return payload;
         } else if (json.error === 'NO_API_KEY') {
           throw new Error('NO_API_KEY');
         }
@@ -459,14 +504,19 @@ Return ONLY a valid JSON object matching this schema (no markdown code blocks, p
     this.consecutiveFailures = 0;
     this.isCircuitBroken = false;
 
-    this.cache[player.id] = {
+    const cleanSlug = player.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const payload = { ...successfulJson, playerName: player.name };
+    const cacheEntry = {
       timestamp: Date.now(),
-      data: successfulJson
+      playerName: player.name,
+      data: payload
     };
+    this.cache[cleanSlug] = cacheEntry;
+    this.cache[player.id] = cacheEntry;
     this.saveCache();
 
     if (this.syncService && typeof this.syncService.saveAiPlayerIntel === 'function') {
-      this.syncService.saveAiPlayerIntel(player.id, successfulJson);
+      this.syncService.saveAiPlayerIntel(player, payload);
     }
 
     this.logActivity({

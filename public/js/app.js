@@ -603,7 +603,7 @@ export class AuctionDraftApp {
     const advice = this.engine.getBiddingAdvice(player, userTeam, inflation.inflationRate);
     const dynamicVal = this.engine.getDynamicPlayerValue(player, inflation.inflationRate);
     const posClass = `badge-${player.pos.toLowerCase()}`;
-    const news = this.activeNominationNews || this.gemini.getCachedNews(player.id);
+    const news = this.activeNominationNews || this.gemini.getCachedNews(player);
     const injuryStr = (news && news.injuryStatus) ? news.injuryStatus : (player.injury || 'Healthy');
     const isInjured = injuryStr.toLowerCase().includes('out') || injuryStr.toLowerCase().includes('ir') || injuryStr.toLowerCase().includes('elevated') || injuryStr.toLowerCase().includes('quest') || injuryStr.toLowerCase().includes('risk');
 
@@ -1110,7 +1110,7 @@ export class AuctionDraftApp {
       if (isDrafted) rowClass += ' row-drafted';
       if (isMyTeam) rowClass += ' row-my-team';
 
-      const cachedNews = this.gemini.getCachedNews(p.id);
+      const cachedNews = this.gemini.getCachedNews(p.id, p.name);
       const injuryStr = (cachedNews && cachedNews.injuryStatus) ? cachedNews.injuryStatus : (p.injury || '');
       const isInjured = injuryStr && (injuryStr.toLowerCase().includes('out') || injuryStr.toLowerCase().includes('ir') || injuryStr.toLowerCase().includes('elevated') || injuryStr.toLowerCase().includes('quest') || injuryStr.toLowerCase().includes('risk'));
 
@@ -1960,7 +1960,7 @@ export class AuctionDraftApp {
       `;
     }
 
-    const news = this.activeNominationNews || this.gemini.getCachedNews(player.id);
+    const news = this.activeNominationNews || this.gemini.getCachedNews(player);
 
     if (this.isLoadingNews) {
       const providerLabel = this.gemini.provider === 'local' ? `Local ${this.gemini.localModel}` : 'Gemini Live Intel';

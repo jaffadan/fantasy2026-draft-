@@ -242,14 +242,23 @@ export class FirestoreSyncService {
       snapshot.docChanges().forEach((change) => {
         if (change.type === 'added' || change.type === 'modified') {
           const data = change.doc.data();
-          if (data && data.playerId && data.intel) {
-            if (!this.gemini.cache[data.playerId]) {
-              newEntriesCount++;
+          if (data && data.intel) {
+            const pName = data.playerName || data.intel.playerName || '';
+            const cleanSlug = pName ? pName.toLowerCase().replace(/[^a-z0-9]/g, '') : (data.playerId || '');
+            if (cleanSlug) {
+              if (!this.gemini.cache[cleanSlug]) {
+                newEntriesCount++;
+              }
+              const entry = {
+                timestamp: data.timestamp || Date.now(),
+                playerName: pName,
+                data: data.intel
+              };
+              this.gemini.cache[cleanSlug] = entry;
+              if (data.playerId && !data.playerId.startsWith('p_')) {
+                this.gemini.cache[data.playerId] = entry;
+              }
             }
-            this.gemini.cache[data.playerId] = {
-              timestamp: data.timestamp || Date.now(),
-              data: data.intel
-            };
           }
         }
       });
@@ -258,7 +267,7 @@ export class FirestoreSyncService {
         this.gemini.saveCache();
         console.log(`⚡ [Firestore Sync] Synced ${newEntriesCount} new AI scouting reports from Cloud DB`);
         if (window.app && typeof window.app.updatePreloadUI === 'function') {
-          window.app.updatePreloadUI(this.gemini.getPreloadedCount(window.app.store?.state?.players?.length || 310));
+          window.app.updatePreloadUI(this.gemini.getPreloadedCount(window.app.store?.state?.players?.length || 390));
           if (window.app.store?.state?.activeTab === 'ai-admin') {
             window.app.renderAiAdmin();
           }
@@ -272,24 +281,28 @@ export class FirestoreSyncService {
   /**
    * Save a single player AI scouting intel to Cloud DB
    */
-  async saveAiPlayerIntel(playerId, intel) {
-    if (!this.db || !playerId || !intel) return;
+  async saveAiPlayerIntel(player, intel) {
+    if (!this.db || !player || !intel) return;
+
+    const playerName = typeof player === 'object' ? player.name : (intel.playerName || '');
+    const cleanSlug = playerName ? playerName.toLowerCase().replace(/[^a-z0-9]/g, '') : (typeof player === 'string' ? player : player.id);
 
     try {
-      const docRef = this.db.collection('leagues').doc('2026_draft').collection('ai_cache').doc(playerId);
+      const docRef = this.db.collection('leagues').doc('2026_draft').collection('ai_cache').doc(cleanSlug);
       await docRef.set({
-        playerId: playerId,
+        playerId: cleanSlug,
+        playerName: playerName,
         intel: intel,
         timestamp: Date.now(),
         updatedBy: this.currentUser ? this.currentUser.email : 'jaffadan@gmail.com'
       }, { merge: true });
     } catch (e) {
-      console.warn(`⚡ [Firestore Sync] Failed to save AI intel for ${playerId}:`, e);
+      console.warn(`⚡ [Firestore Sync] Failed to save AI intel for ${cleanSlug}:`, e);
     }
   }
 
   /**
-   * Sync all existing local AI cache entries to Firestore Cloud DB
+   * Batch push local AI cache to Cloud DB
    */
   async syncLocalAiCacheToCloud() {
     if (!this.db || !this.gemini || !this.gemini.cache) return;
@@ -297,17 +310,19 @@ export class FirestoreSyncService {
     const keys = Object.keys(this.gemini.cache);
     if (keys.length === 0) return;
 
-    console.log(`⚡ [Firestore Sync] Syncing ${keys.length} local AI reports to Cloud DB...`);
     const batch = this.db.batch();
     const aiCacheCol = this.db.collection('leagues').doc('2026_draft').collection('ai_cache');
 
     let count = 0;
-    for (const pId of keys) {
-      const item = this.gemini.cache[pId];
+    for (const key of keys) {
+      const item = this.gemini.cache[key];
       if (item && item.data) {
-        const docRef = aiCacheCol.doc(pId);
+        const pName = item.playerName || item.data.playerName || '';
+        const cleanSlug = pName ? pName.toLowerCase().replace(/[^a-z0-9]/g, '') : key;
+        const docRef = aiCacheCol.doc(cleanSlug);
         batch.set(docRef, {
-          playerId: pId,
+          playerId: cleanSlug,
+          playerName: pName,
           intel: item.data,
           timestamp: item.timestamp || Date.now(),
           updatedBy: this.currentUser ? this.currentUser.email : 'jaffadan@gmail.com'
