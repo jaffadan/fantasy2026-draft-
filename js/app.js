@@ -2994,20 +2994,34 @@ export class AuctionDraftApp {
   }
 
   handleIncomingChatMessages(messages) {
-    if (!messages) return;
+    if (!messages || !Array.isArray(messages)) return;
+    const myRole = this.sync.getUserRole();
     const prevCount = this.chatMessages.length;
-    const isNew = messages.length > prevCount;
-    this.chatMessages = messages;
+
+    // Deduplicate incoming messages with local optimistic items
+    const seen = new Set();
+    const merged = [];
+    for (const msg of messages) {
+      const key = msg.id || `${msg.sender}_${msg.timestamp}_${msg.text}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        merged.push(msg);
+      }
+    }
+
+    const isNew = merged.length > prevCount;
+    this.chatMessages = merged;
 
     if (isNew && prevCount > 0) {
-      const latestMsg = messages[messages.length - 1];
-      const currentUserEmail = (this.auth?.currentUser?.email || 'jaffadan@gmail.com').toLowerCase();
-      const isFromPartner = latestMsg.sender && latestMsg.sender.toLowerCase() !== currentUserEmail;
+      const latestMsg = merged[merged.length - 1];
+      const isFromPartner = latestMsg.userKey 
+        ? (latestMsg.userKey === myRole.partnerKey) 
+        : (latestMsg.sender && latestMsg.sender.toLowerCase() !== myRole.email.toLowerCase());
 
       if (isFromPartner) {
         if (this.isChatMinimized) {
           this.unreadChatCount++;
-          this.showToast(`💬 ${latestMsg.displayName || 'Partner'}: "${latestMsg.text}"`, 'info');
+          this.showToast(`💬 ${latestMsg.displayName || myRole.partnerName}: "${latestMsg.text}"`, 'info');
         }
       }
     }
@@ -3025,9 +3039,7 @@ export class AuctionDraftApp {
 
   handleIncomingTypingStatus(status) {
     if (!status) return;
-    const currentUserEmail = (this.auth?.currentUser?.email || 'jaffadan@gmail.com').toLowerCase();
-    const isFromPartner = status.sender && status.sender.toLowerCase() !== currentUserEmail;
-    if (!isFromPartner) return;
+    const myRole = this.sync.getUserRole();
 
     const now = Date.now();
     const isRecent = status.timestamp && (now - status.timestamp < 3500);
@@ -3038,7 +3050,7 @@ export class AuctionDraftApp {
     const previewSpan = document.getElementById('partner-chat-latest-preview');
 
     if (isTyping) {
-      const name = status.displayName || 'Partner';
+      const name = status.displayName || myRole.partnerName;
       if (typingIndicator) {
         typingIndicator.classList.remove('hidden');
         typingIndicator.classList.add('flex');
@@ -3076,10 +3088,21 @@ export class AuctionDraftApp {
     this.sync.setTypingStatus(false);
     if (this.typingTimeout) clearTimeout(this.typingTimeout);
 
-    const success = await this.sync.sendChatMessage(text);
-    if (!success) {
-      this.showToast('Failed to send message. Check cloud connection.', 'error');
-    }
+    // 1. Instant Optimistic Local Display (0ms latency!)
+    const myRole = this.sync.getUserRole();
+    const localMsg = {
+      id: `local_${Date.now()}`,
+      userKey: myRole.key,
+      sender: myRole.email,
+      displayName: myRole.displayName,
+      text: text,
+      timestamp: Date.now()
+    };
+    this.chatMessages.push(localMsg);
+    this.renderChatWidget();
+
+    // 2. Push to Firestore
+    await this.sync.sendChatMessage(text);
   }
 
   toggleChatMinimize(minimized) {

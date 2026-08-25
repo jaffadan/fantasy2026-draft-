@@ -377,24 +377,52 @@ export class FirestoreSyncService {
   }
 
   /**
+  /**
+   * Helper to get current user role and partner role reliably
+   */
+  getUserRole() {
+    const email = (this.currentUser?.email || '').toLowerCase();
+    if (email.includes('tracy')) {
+      return {
+        key: 'tracy',
+        displayName: 'Tracy',
+        email: this.currentUser?.email || 'Tracy734g@gmail.com',
+        partnerKey: 'dan',
+        partnerName: 'Dan'
+      };
+    }
+    return {
+      key: 'dan',
+      displayName: 'Dan',
+      email: this.currentUser?.email || 'jaffadan@gmail.com',
+      partnerKey: 'tracy',
+      partnerName: 'Tracy'
+    };
+  }
+
+  /**
    * Send a real-time chat message to partner
    */
   async sendChatMessage(text) {
-    if (!this.db || !text || !text.trim()) return false;
+    if (!this.db || !text || !text.trim()) return null;
+    const role = this.getUserRole();
+    const msg = {
+      id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+      userKey: role.key,
+      sender: role.email,
+      displayName: role.displayName,
+      text: text.trim(),
+      timestamp: Date.now()
+    };
+
     try {
-      const userEmail = this.currentUser ? this.currentUser.email : 'jaffadan@gmail.com';
-      const displayName = userEmail.toLowerCase().includes('tracy') ? 'Tracy' : 'Dan';
       const chatCol = this.db.collection('leagues').doc('2026_draft').collection('chat_messages');
-      await chatCol.add({
-        sender: userEmail,
-        displayName: displayName,
-        text: text.trim(),
-        timestamp: Date.now()
-      });
-      return true;
+      // Fire-and-forget write so UI does not wait
+      chatCol.doc(msg.id).set(msg).catch(e => console.warn('⚡ [Firestore Sync] Chat write warning:', e));
+      return msg;
     } catch (e) {
       console.error('⚡ [Firestore Sync] Failed to send chat message:', e);
-      return false;
+      return msg;
     }
   }
 
@@ -403,18 +431,23 @@ export class FirestoreSyncService {
    */
   listenToTyping() {
     if (!this.db) return;
-    const typingDoc = this.db.collection('leagues').doc('2026_draft').collection('presence').doc('typing');
+    const typingDoc = this.db.collection('leagues').doc('2026_draft').collection('presence').doc('typing_state');
 
     this.typingUnsubscribe = typingDoc.onSnapshot((doc) => {
       if (!doc.exists) return;
       const data = doc.data();
       if (!data) return;
 
-      for (const cb of this.typingCallbacks) {
-        try {
-          cb(data);
-        } catch (e) {
-          console.error('Typing callback error:', e);
+      const myRole = this.getUserRole();
+      // Specifically listen to the partner's isolated typing state
+      const partnerData = data[myRole.partnerKey];
+      if (partnerData) {
+        for (const cb of this.typingCallbacks) {
+          try {
+            cb(partnerData);
+          } catch (e) {
+            console.error('Typing callback error:', e);
+          }
         }
       }
     }, (error) => {
@@ -423,29 +456,32 @@ export class FirestoreSyncService {
   }
 
   /**
-   * Broadcast current user's typing state
+   * Broadcast current user's typing state into isolated presence slot
    */
   async setTypingStatus(isTyping) {
     if (!this.db) return;
     const now = Date.now();
-    // Throttle writes to once every 1.5 seconds if already typing
-    if (isTyping && now - this.lastTypingWriteTimestamp < 1500) {
+    const role = this.getUserRole();
+
+    // Throttle positive typing events to 1.2s; send false immediately
+    if (isTyping && (now - this.lastTypingWriteTimestamp < 1200)) {
       return;
     }
     this.lastTypingWriteTimestamp = now;
 
     try {
-      const userEmail = this.currentUser ? this.currentUser.email : 'jaffadan@gmail.com';
-      const displayName = userEmail.toLowerCase().includes('tracy') ? 'Tracy' : 'Dan';
-      const typingDoc = this.db.collection('leagues').doc('2026_draft').collection('presence').doc('typing');
-      await typingDoc.set({
-        sender: userEmail,
-        displayName: displayName,
-        isTyping: Boolean(isTyping),
-        timestamp: now
-      }, { merge: true });
+      const typingDoc = this.db.collection('leagues').doc('2026_draft').collection('presence').doc('typing_state');
+      typingDoc.set({
+        [role.key]: {
+          isTyping: Boolean(isTyping),
+          displayName: role.displayName,
+          userKey: role.key,
+          email: role.email,
+          timestamp: now
+        }
+      }, { merge: true }).catch(() => {});
     } catch (e) {
-      // Non-blocking warning
+      // Non-blocking
     }
   }
 
