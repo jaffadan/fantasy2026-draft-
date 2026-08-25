@@ -4,6 +4,7 @@ import { SheetSync } from './sheets_sync.js?v=2026.5';
 import { GeminiNewsService } from './gemini_news.js?v=2026.5';
 import { AuthService } from './auth.js?v=2026.5';
 import { FirestoreSyncService } from './firestore_sync.js?v=2026.5';
+import { InSeasonModule } from './in_season.js?v=2026.11';
 import { defaultData } from '../data/default_data.js?v=2026.5';
 
 export class AuctionDraftApp {
@@ -14,6 +15,7 @@ export class AuctionDraftApp {
     this.gemini = new GeminiNewsService();
     this.auth = new AuthService();
     this.sync = new FirestoreSyncService();
+    this.inSeason = new InSeasonModule(this);
 
     this.store.setSyncService(this.sync);
     this.gemini.setSyncService(this.sync);
@@ -84,6 +86,13 @@ export class AuctionDraftApp {
       this.updatePreloadUI(stats);
       if (this.store.state.activeTab === 'ai-admin') {
         this.renderAiAdmin();
+      }
+    });
+
+    // Initialize In-Season Intelligence Module
+    this.inSeason.init().then(() => {
+      if (this.store.state.activeTab === 'in-season') {
+        this.inSeason.render();
       }
     });
 
@@ -411,8 +420,8 @@ export class AuctionDraftApp {
       } else if ((e.altKey && e.key.toLowerCase() === 'r') || (e.ctrlKey && e.key.toLowerCase() === 'y')) {
         e.preventDefault();
         this.handleRedo();
-      } else if (e.key >= '1' && e.key <= '7') {
-        const tabs = ['draft-room', 'cheat-sheet', 'my-team', 'all-teams', 'rookie-hub', 'rules-scoring', 'ai-admin'];
+      } else if (e.key >= '1' && e.key <= '8') {
+        const tabs = ['draft-room', 'cheat-sheet', 'my-team', 'all-teams', 'rookie-hub', 'rules-scoring', 'in-season', 'ai-admin'];
         const targetTab = tabs[parseInt(e.key, 10) - 1];
         if (targetTab) this.switchTab(targetTab);
       } else if (e.key === 'Escape') {
@@ -441,6 +450,9 @@ export class AuctionDraftApp {
     });
 
     this.store.setActiveTab(tabId);
+    if (tabId === 'in-season') {
+      this.inSeason.render();
+    }
     this.render();
   }
 
@@ -456,6 +468,9 @@ export class AuctionDraftApp {
     this.renderAllTeams();
     this.renderRookieHub();
     this.renderAiAdmin();
+    if (this.store.state.activeTab === 'in-season') {
+      this.inSeason.render();
+    }
     this.updateGeminiStatusUI();
 
     const draftOrderModal = document.getElementById('draft-order-modal');

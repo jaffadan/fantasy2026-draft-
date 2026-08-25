@@ -325,6 +325,126 @@ Return ONLY a valid JSON object matching this schema (no markdown code blocks, p
     return;
   }
 
+  // --- CBS SPORTS FANTASY ENDPOINTS ---
+
+  // 1. CBS Status check
+  if (req.url.startsWith('/api/cbs/status')) {
+    try {
+      const sessionPath = path.join(__dirname, 'data', 'cbs_session.json');
+      const dataPath = path.join(__dirname, 'data', 'cbs_league_data.json');
+      const hasSession = fs.existsSync(sessionPath);
+      const hasData = fs.existsSync(dataPath);
+      let lastSynced = null;
+      if (hasData) {
+        try {
+          const ld = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+          lastSynced = ld.league_info?.last_synced;
+        } catch (e) {}
+      }
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({
+        success: true,
+        hasSession,
+        hasData,
+        playwrightReady: true,
+        lastSynced
+      }));
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ success: false, error: e.message }));
+    }
+    return;
+  }
+
+  // 2. CBS League Data
+  if (req.url.startsWith('/api/cbs/data')) {
+    try {
+      let dataPath = path.join(__dirname, 'data', 'cbs_league_data.json');
+      if (!fs.existsSync(dataPath)) {
+        dataPath = path.join(__dirname, 'public', 'data', 'cbs_league_data.json');
+      }
+      if (fs.existsSync(dataPath)) {
+        const raw = fs.readFileSync(dataPath, 'utf8');
+        res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: true, data: JSON.parse(raw) }));
+      } else {
+        res.writeHead(404, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: false, error: 'No CBS league data found' }));
+      }
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ success: false, error: e.message }));
+    }
+    return;
+  }
+
+  // 3. CBS Playwright Sync trigger
+  if (req.url.startsWith('/api/cbs/sync') && req.method === 'POST') {
+    try {
+      const { spawn } = await import('child_process');
+      const scriptPath = path.join(__dirname, 'scripts', 'cbs_sync.py');
+      const child = spawn('python', [scriptPath, '--sync']);
+      let stdout = '';
+      let stderr = '';
+      child.stdout.on('data', d => { stdout += d.toString(); });
+      child.stderr.on('data', d => { stderr += d.toString(); });
+
+      child.on('close', code => {
+        let leagueData = null;
+        const dataPath = path.join(__dirname, 'data', 'cbs_league_data.json');
+        if (fs.existsSync(dataPath)) {
+          try { leagueData = JSON.parse(fs.readFileSync(dataPath, 'utf8')); } catch (e) {}
+        }
+        res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({
+          success: code === 0,
+          stdout,
+          stderr,
+          data: leagueData
+        }));
+      });
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ success: false, error: e.message }));
+    }
+    return;
+  }
+
+  // 4. CBS Interactive Login Launch
+  if (req.url.startsWith('/api/cbs/login') && req.method === 'POST') {
+    try {
+      const { spawn } = await import('child_process');
+      const scriptPath = path.join(__dirname, 'scripts', 'cbs_sync.py');
+      spawn('python', [scriptPath, '--login'], { detached: true, stdio: 'ignore' }).unref();
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({
+        success: true,
+        message: "Interactive browser opened for CBS login. Please log in and close the browser window when done."
+      }));
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ success: false, error: e.message }));
+    }
+    return;
+  }
+
+  // 5. CBS Manual Data Save
+  if (req.url.startsWith('/api/cbs/save') && req.method === 'POST') {
+    try {
+      const body = await readRequestBody(req);
+      const dataPath = path.join(__dirname, 'data', 'cbs_league_data.json');
+      const publicPath = path.join(__dirname, 'public', 'data', 'cbs_league_data.json');
+      fs.writeFileSync(dataPath, JSON.stringify(body, null, 2), 'utf8');
+      fs.writeFileSync(publicPath, JSON.stringify(body, null, 2), 'utf8');
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ success: true, message: 'Saved successfully' }));
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ success: false, error: e.message }));
+    }
+    return;
+  }
+
   // --- STATIC FILE SERVING ---
   let reqPath = req.url === '/' ? 'index.html' : req.url.split('?')[0];
   let filePath = path.join(__dirname, reqPath);

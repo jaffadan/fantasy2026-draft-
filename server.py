@@ -140,7 +140,16 @@ class DraftAppHandler(http.server.SimpleHTTPRequestHandler):
             self.handle_player_news()
             return
 
-        # 5. Server Shutdown
+        # 5. CBS Sports Fantasy Status & Data
+        if self.path.startswith('/api/cbs/status'):
+            self.handle_cbs_status()
+            return
+
+        if self.path.startswith('/api/cbs/data'):
+            self.handle_cbs_data()
+            return
+
+        # 6. Server Shutdown
         if self.path.startswith('/api/shutdown'):
             self.handle_shutdown()
             return
@@ -220,6 +229,21 @@ class DraftAppHandler(http.server.SimpleHTTPRequestHandler):
             self.send_header('Set-Cookie', 'auth_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0')
             self.end_headers()
             self.wfile.write(json.dumps({"success": True}).encode('utf-8'))
+            return
+
+        # 3. CBS Playwright Sync Trigger
+        if self.path.startswith('/api/cbs/sync'):
+            self.handle_cbs_sync()
+            return
+
+        # 4. CBS Interactive Login Launch
+        if self.path.startswith('/api/cbs/login'):
+            self.handle_cbs_login()
+            return
+
+        # 5. CBS Manual Data Save
+        if self.path.startswith('/api/cbs/save'):
+            self.handle_cbs_save()
             return
 
         self.send_response(404)
@@ -366,6 +390,143 @@ Return ONLY a valid JSON object matching this schema (no markdown code blocks, p
                 "rookieCsv": rookie_csv
             }
             self.wfile.write(json.dumps(response_data).encode('utf-8'))
+        except Exception as e:
+            self.send_response(500)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode('utf-8'))
+
+    def handle_cbs_status(self):
+        try:
+            session_path = os.path.join(DIRECTORY, 'data', 'cbs_session.json')
+            data_path = os.path.join(DIRECTORY, 'data', 'cbs_league_data.json')
+            has_session = os.path.exists(session_path)
+            has_data = os.path.exists(data_path)
+            last_synced = None
+            if has_data:
+                try:
+                    with open(data_path, 'r', encoding='utf-8') as f:
+                        ld = json.load(f)
+                        last_synced = ld.get('league_info', {}).get('last_synced')
+                except Exception:
+                    pass
+
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps({
+                "success": True,
+                "hasSession": has_session,
+                "hasData": has_data,
+                "playwrightReady": True,
+                "lastSynced": last_synced
+            }).encode('utf-8'))
+        except Exception as e:
+            self.send_response(500)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode('utf-8'))
+
+    def handle_cbs_data(self):
+        try:
+            data_path = os.path.join(DIRECTORY, 'data', 'cbs_league_data.json')
+            if not os.path.exists(data_path):
+                data_path = os.path.join(DIRECTORY, 'public', 'data', 'cbs_league_data.json')
+
+            if os.path.exists(data_path):
+                with open(data_path, 'r', encoding='utf-8') as f:
+                    league_data = json.load(f)
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps({"success": True, "data": league_data}).encode('utf-8'))
+            else:
+                self.send_response(404)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps({"success": False, "error": "No CBS league data found"}).encode('utf-8'))
+        except Exception as e:
+            self.send_response(500)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode('utf-8'))
+
+    def handle_cbs_sync(self):
+        try:
+            import subprocess
+            script_path = os.path.join(DIRECTORY, 'scripts', 'cbs_sync.py')
+            result = subprocess.run([sys.executable, script_path, '--sync'], capture_output=True, text=True, timeout=60)
+            
+            data_path = os.path.join(DIRECTORY, 'data', 'cbs_league_data.json')
+            league_data = {}
+            if os.path.exists(data_path):
+                with open(data_path, 'r', encoding='utf-8') as f:
+                    league_data = json.load(f)
+
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps({
+                "success": result.returncode == 0,
+                "stdout": result.stdout,
+                "stderr": result.stderr,
+                "data": league_data
+            }).encode('utf-8'))
+        except Exception as e:
+            self.send_response(500)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode('utf-8'))
+
+    def handle_cbs_login(self):
+        try:
+            import subprocess
+            script_path = os.path.join(DIRECTORY, 'scripts', 'cbs_sync.py')
+            # Launch interactive login in separate thread/process so user can interact
+            threading.Thread(target=lambda: subprocess.run([sys.executable, script_path, '--login']), daemon=True).start()
+            
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps({
+                "success": True,
+                "message": "Interactive browser opened for CBS login. Please log in and close the browser window when done."
+            }).encode('utf-8'))
+        except Exception as e:
+            self.send_response(500)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode('utf-8'))
+
+    def handle_cbs_save(self):
+        try:
+            content_length = int(self.headers.get('Content-Length', 0))
+            body_bytes = self.rfile.read(content_length)
+            body = json.loads(body_bytes.decode('utf-8')) if body_bytes else {}
+            
+            data_path = os.path.join(DIRECTORY, 'data', 'cbs_league_data.json')
+            public_path = os.path.join(DIRECTORY, 'public', 'data', 'cbs_league_data.json')
+            
+            with open(data_path, 'w', encoding='utf-8') as f:
+                json.dump(body, f, indent=2)
+            with open(public_path, 'w', encoding='utf-8') as f:
+                json.dump(body, f, indent=2)
+
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps({"success": True, "message": "Saved successfully"}).encode('utf-8'))
         except Exception as e:
             self.send_response(500)
             self.send_header('Content-Type', 'application/json')

@@ -55,6 +55,14 @@ python server.py
    - Copy-paste CSV/TSV table importer.
    - Export full draft board to CSV and JSON.
 
+7. **🎯 In-Season Intelligence & CBS Sports Playwright Sync**:
+   - **Weekly Lineup Optimizer**: Customized 1 QB, 2 RB, 2 WR, 2 Flex, 1 K, 1 DST start/sit engine with **Floor Mode** (safe points for favorites) and **Ceiling Mode** (distance bonus boom chasing for underdogs).
+   - **Matchup Context & Opponent Scouting**: Win probability meter, point spread margin, and tactical posture recommendations (e.g. holding high-upside rookie stashes when heavily favored).
+   - **Defensive Blocking Radar**: Identifies opponent roster vulnerabilities and alerts you to potential waiver blocks.
+   - **Waiver Wire & \$100 FAAB Advisor**: Real-time target/snap spike flags, injury handcuff alerts, and suggested FAAB bids.
+   - **Bench Drop & Stash Protector**: Protects untouchable rookies/IR stashes while identifying cuttable bench depth.
+   - **Playwright Automation**: Run `python scripts/cbs_sync.py --login` to save your CBS session once, and `python scripts/cbs_sync.py --sync` (or the in-app "Sync CBS Live" button) for instant headless updates from `https://nefjbffl.football.cbssports.com/`.
+
 ---
 
 ## ⚙️ League Rules & Custom Scoring Specs
