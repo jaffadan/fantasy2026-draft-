@@ -61,6 +61,11 @@ export class AuctionDraftApp {
       this.handleIncomingChatMessages(messages);
     });
 
+    // Register Real-Time Partner Typing Listener
+    this.sync.onTypingChange((status) => {
+      this.handleIncomingTypingStatus(status);
+    });
+
     // Register Auth listener
     this.auth.onAuthStateChanged((isAuthenticated, user) => {
       this.handleAuthStateChange(isAuthenticated, user);
@@ -2991,6 +2996,56 @@ export class AuctionDraftApp {
     this.renderChatWidget();
   }
 
+  handleChatInput() {
+    this.sync.setTypingStatus(true);
+    if (this.typingTimeout) clearTimeout(this.typingTimeout);
+    this.typingTimeout = setTimeout(() => {
+      this.sync.setTypingStatus(false);
+    }, 2500);
+  }
+
+  handleIncomingTypingStatus(status) {
+    if (!status) return;
+    const currentUserEmail = (this.auth?.currentUser?.email || 'jaffadan@gmail.com').toLowerCase();
+    const isFromPartner = status.sender && status.sender.toLowerCase() !== currentUserEmail;
+    if (!isFromPartner) return;
+
+    const now = Date.now();
+    const isRecent = status.timestamp && (now - status.timestamp < 3500);
+    const isTyping = Boolean(status.isTyping) && isRecent;
+
+    const typingIndicator = document.getElementById('partner-typing-indicator');
+    const typingText = document.getElementById('partner-typing-text');
+    const previewSpan = document.getElementById('partner-chat-latest-preview');
+
+    if (isTyping) {
+      const name = status.displayName || 'Partner';
+      if (typingIndicator) {
+        typingIndicator.classList.remove('hidden');
+        typingIndicator.classList.add('flex');
+      }
+      if (typingText) typingText.textContent = `${name} is typing...`;
+
+      if (this.isChatMinimized && previewSpan) {
+        previewSpan.textContent = ` ✍️ ${name} is typing...`;
+        previewSpan.classList.remove('hidden');
+      }
+
+      if (this.partnerTypingTimeout) clearTimeout(this.partnerTypingTimeout);
+      this.partnerTypingTimeout = setTimeout(() => {
+        if (typingIndicator) {
+          typingIndicator.classList.add('hidden');
+          typingIndicator.classList.remove('flex');
+        }
+      }, 3500);
+    } else {
+      if (typingIndicator) {
+        typingIndicator.classList.add('hidden');
+        typingIndicator.classList.remove('flex');
+      }
+    }
+  }
+
   async handleSendChatMessage(e) {
     if (e && typeof e.preventDefault === 'function') e.preventDefault();
     const input = document.getElementById('partner-chat-input');
@@ -2999,6 +3054,9 @@ export class AuctionDraftApp {
     if (!text) return;
 
     input.value = '';
+    this.sync.setTypingStatus(false);
+    if (this.typingTimeout) clearTimeout(this.typingTimeout);
+
     const success = await this.sync.sendChatMessage(text);
     if (!success) {
       this.showToast('Failed to send message. Check cloud connection.', 'error');

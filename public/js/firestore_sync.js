@@ -32,11 +32,18 @@ export class FirestoreSyncService {
     this.stateUnsubscribe = null;
     this.aiCacheUnsubscribe = null;
     this.chatUnsubscribe = null;
+    this.typingUnsubscribe = null;
     this.statusCallbacks = [];
     this.remoteActionCallbacks = [];
     this.chatCallbacks = [];
+    this.typingCallbacks = [];
     this.lastLocalWriteTimestamp = 0;
+    this.lastTypingWriteTimestamp = 0;
     this.localWriteLockDuration = 800; // Ignore echo snapshots for 800ms
+  }
+
+  onTypingChange(callback) {
+    this.typingCallbacks.push(callback);
   }
 
   onChatMessage(callback) {
@@ -115,6 +122,7 @@ export class FirestoreSyncService {
       this.listenToDraftState();
       this.listenToAiCache();
       this.listenToChat();
+      this.listenToTyping();
 
       // Upload any local AI cache to Cloud DB so other laptop gets it
       this.syncLocalAiCacheToCloud();
@@ -364,6 +372,57 @@ export class FirestoreSyncService {
     } catch (e) {
       console.error('⚡ [Firestore Sync] Failed to send chat message:', e);
       return false;
+    }
+  }
+
+  /**
+   * Listen to real-time typing indicators between partners
+   */
+  listenToTyping() {
+    if (!this.db) return;
+    const typingDoc = this.db.collection('leagues').doc('2026_draft').collection('presence').doc('typing');
+
+    this.typingUnsubscribe = typingDoc.onSnapshot((doc) => {
+      if (!doc.exists) return;
+      const data = doc.data();
+      if (!data) return;
+
+      for (const cb of this.typingCallbacks) {
+        try {
+          cb(data);
+        } catch (e) {
+          console.error('Typing callback error:', e);
+        }
+      }
+    }, (error) => {
+      console.warn('⚡ [Firestore Sync] Typing listener warning:', error);
+    });
+  }
+
+  /**
+   * Broadcast current user's typing state
+   */
+  async setTypingStatus(isTyping) {
+    if (!this.db) return;
+    const now = Date.now();
+    // Throttle writes to once every 1.5 seconds if already typing
+    if (isTyping && now - this.lastTypingWriteTimestamp < 1500) {
+      return;
+    }
+    this.lastTypingWriteTimestamp = now;
+
+    try {
+      const userEmail = this.currentUser ? this.currentUser.email : 'jaffadan@gmail.com';
+      const displayName = userEmail.toLowerCase().includes('tracy') ? 'Tracy' : 'Dan';
+      const typingDoc = this.db.collection('leagues').doc('2026_draft').collection('presence').doc('typing');
+      await typingDoc.set({
+        sender: userEmail,
+        displayName: displayName,
+        isTyping: Boolean(isTyping),
+        timestamp: now
+      }, { merge: true });
+    } catch (e) {
+      // Non-blocking warning
     }
   }
 

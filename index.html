@@ -1200,6 +1200,16 @@
         </div>
       </div>
 
+      <!-- Typing Indicator Bar -->
+      <div id="partner-typing-indicator" class="hidden px-3 py-1 bg-slate-950/60 text-[10px] text-indigo-300 border-t border-slate-800/60 items-center gap-1.5 font-medium">
+        <span class="flex gap-0.5">
+          <span class="w-1 h-1 rounded-full bg-indigo-400 animate-pulse"></span>
+          <span class="w-1 h-1 rounded-full bg-indigo-400 animate-pulse"></span>
+          <span class="w-1 h-1 rounded-full bg-indigo-400 animate-pulse"></span>
+        </span>
+        <span id="partner-typing-text" class="italic">Partner is typing...</span>
+      </div>
+
       <!-- Chat Input Form -->
       <form id="partner-chat-form" onsubmit="window.app.handleSendChatMessage(event)" class="p-2 bg-slate-950/80 border-t border-slate-800/80 flex items-center gap-1.5">
         <input 
@@ -1208,6 +1218,7 @@
           placeholder="Message partner (Enter to send)..." 
           maxlength="200"
           autocomplete="off"
+          oninput="window.app.handleChatInput()"
           class="flex-1 bg-slate-900 border border-slate-700/70 rounded-xl px-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-all"
         />
         <button type="submit" class="px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-bold rounded-xl shadow-md transition-all shrink-0">
@@ -1236,7 +1247,7 @@
   <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2 pointer-events-none"></div>
 
   <!-- Main Application Entry Module -->
-  <script type="module" src="js/app.js?v=2026.7"></script>
+  <script type="module" src="js/app.js?v=2026.8"></script>
 
 </body>
 </html>
