@@ -246,6 +246,11 @@ class DraftAppHandler(http.server.SimpleHTTPRequestHandler):
             self.handle_cbs_save()
             return
 
+        # 6. CBS Cookie String Session Import
+        if self.path.startswith('/api/cbs/cookie'):
+            self.handle_cbs_cookie()
+            return
+
         self.send_response(404)
         self.end_headers()
 
@@ -532,6 +537,33 @@ Return ONLY a valid JSON object matching this schema (no markdown code blocks, p
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
             self.wfile.write(json.dumps({"success": True, "message": "Saved successfully"}).encode('utf-8'))
+        except Exception as e:
+            self.send_response(500)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode('utf-8'))
+
+    def handle_cbs_cookie(self):
+        try:
+            content_length = int(self.headers.get('Content-Length', 0))
+            body_bytes = self.rfile.read(content_length)
+            body = json.loads(body_bytes.decode('utf-8')) if body_bytes else {}
+            cookie_str = body.get('cookieString', '')
+
+            import subprocess
+            script_path = os.path.join(DIRECTORY, 'scripts', 'cbs_sync.py')
+            res = subprocess.run([sys.executable, script_path, '--cookie', cookie_str], capture_output=True, text=True)
+
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps({
+                "success": res.returncode == 0,
+                "message": "CBS session cookies successfully imported and saved!",
+                "stdout": res.stdout
+            }).encode('utf-8'))
         except Exception as e:
             self.send_response(500)
             self.send_header('Content-Type', 'application/json')

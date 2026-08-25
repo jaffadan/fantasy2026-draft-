@@ -743,6 +743,11 @@
             <i data-lucide="key" class="w-3.5 h-3.5 text-amber-400"></i>
             <span>CBS Login</span>
           </button>
+
+          <button id="btn-cbs-cookie" onclick="window.app.inSeason.openCookieModal()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold border border-slate-700 transition-all flex items-center gap-1.5" title="Import session cookie directly from your open CBS browser tab">
+            <i data-lucide="cookie" class="w-3.5 h-3.5 text-sky-400"></i>
+            <span>Import Cookie</span>
+          </button>
         </div>
       </div>
 
@@ -1515,6 +1520,60 @@
       <span id="partner-chat-latest-preview" class="text-[10px] text-slate-400 max-w-[120px] truncate hidden font-normal"></span>
     </button>
 
+  </div>
+
+  <!-- CBS COOKIE IMPORT MODAL -->
+  <div id="modal-cbs-cookie-import" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="glass-panel w-full max-w-lg rounded-2xl border border-slate-700 bg-slate-900/95 p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2">
+          <div class="p-2 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20">
+            <i data-lucide="cookie" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-white">Import CBS Session / Cookie</h3>
+            <p class="text-xs text-slate-400">Quick 1-click connect from your already open CBS browser tab</p>
+          </div>
+        </div>
+        <button onclick="window.app.inSeason.closeCookieModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs text-slate-300">
+        <div class="bg-slate-950/60 p-3 rounded-xl border border-slate-800 space-y-2">
+          <p class="font-bold text-sky-400 flex items-center gap-1.5">
+            <i data-lucide="info" class="w-4 h-4"></i> How to copy from your open CBS tab in 10 seconds:
+          </p>
+          <ol class="list-decimal list-inside space-y-1 text-slate-400">
+            <li>In your open CBS Fantasy tab, press <kbd class="px-1.5 py-0.5 bg-slate-800 rounded font-mono text-slate-200">F12</kbd> (or right-click &gt; Inspect).</li>
+            <li>Click the <b>Console</b> tab.</li>
+            <li>Type <code class="px-1.5 py-0.5 bg-slate-800 rounded text-sky-300 font-mono">copy(document.cookie)</code> and press <b>Enter</b>.</li>
+            <li>Paste it into the box below and click <b>Save & Connect</b>.</li>
+          </ol>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">Paste Cookie String:</label>
+          <textarea 
+            id="cbs-cookie-input" 
+            rows="4" 
+            placeholder="e.g. cbs_user=...; auth_token=...; phpsessid=..."
+            class="w-full bg-slate-950 border border-slate-700/80 rounded-xl p-3 text-xs text-slate-200 font-mono placeholder-slate-600 focus:outline-none focus:border-sky-500 transition-colors resize-none"
+          ></textarea>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-2">
+        <button onclick="window.app.inSeason.closeCookieModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition-all">
+          Cancel
+        </button>
+        <button onclick="window.app.inSeason.saveCookieInput()" class="px-5 py-2 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-sky-600/30 transition-all flex items-center gap-1.5">
+          <i data-lucide="check" class="w-4 h-4"></i>
+          <span>Save & Connect</span>
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- TOAST NOTIFICATION CONTAINER -->

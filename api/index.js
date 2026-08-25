@@ -406,6 +406,17 @@ Return ONLY a valid JSON object matching this schema (no markdown code blocks, p
     return;
   }
 
+  // 4. CBS Cookie Import on Vercel
+  if (url.includes('/api/cbs/cookie')) {
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+    res.end(JSON.stringify({
+      success: true,
+      isVercel: true,
+      message: "Cookie received. Run sync_cbs.bat on your local computer to execute live Playwright scraping."
+    }));
+    return;
+  }
+
   res.writeHead(404, { 'Content-Type': 'text/plain' });
   res.end('Not Found');
 }

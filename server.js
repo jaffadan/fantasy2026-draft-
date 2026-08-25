@@ -479,6 +479,39 @@ Return ONLY a valid JSON object matching this schema (no markdown code blocks, p
     return;
   }
 
+  // 6. CBS Cookie String Session Import
+  if (req.url.startsWith('/api/cbs/cookie') && req.method === 'POST') {
+    try {
+      const body = await readRequestBody(req);
+      const cookieStr = body?.cookieString || '';
+      const { spawn } = await import('child_process');
+      const scriptPath = path.join(__dirname, 'scripts', 'cbs_sync.py');
+      const pythonBin = getPythonExecutable();
+      const child = spawn(pythonBin, [scriptPath, '--cookie', cookieStr], { shell: true });
+
+      let stdout = '';
+      child.stdout?.on('data', d => { stdout += d.toString(); });
+
+      child.on('close', (code) => {
+        res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({
+          success: code === 0,
+          message: code === 0 ? "CBS session cookies successfully imported and saved!" : "Failed to import cookies",
+          stdout
+        }));
+      });
+
+      child.on('error', (err) => {
+        res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      });
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ success: false, error: e.message }));
+    }
+    return;
+  }
+
   // --- STATIC FILE SERVING ---
   let reqPath = req.url === '/' ? 'index.html' : req.url.split('?')[0];
   let filePath = path.join(__dirname, reqPath);

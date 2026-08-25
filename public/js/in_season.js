@@ -227,6 +227,44 @@ export class InSeasonModule {
     }
   }
 
+  openCookieModal() {
+    const modal = document.getElementById('modal-cbs-cookie-import');
+    if (modal) modal.classList.remove('hidden');
+  }
+
+  closeCookieModal() {
+    const modal = document.getElementById('modal-cbs-cookie-import');
+    if (modal) modal.classList.add('hidden');
+  }
+
+  async saveCookieInput() {
+    const input = document.getElementById('cbs-cookie-input');
+    const cookieStr = input ? input.value.trim() : '';
+    if (!cookieStr) {
+      alert('Please paste your CBS cookie string.');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/cbs/cookie', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cookieString: cookieStr })
+      });
+      const json = await res.json();
+      if (json.success) {
+        this.closeCookieModal();
+        if (this.app) this.app.showToast('✅ CBS Session cookies saved successfully!', 'success');
+        await this.fetchStatus();
+        this.triggerLiveSync();
+      } else {
+        alert(json.error || 'Failed to save cookie');
+      }
+    } catch (e) {
+      alert('Error saving cookie: ' + e.message);
+    }
+  }
+
   setStrategyMode(mode) {
     this.strategyMode = mode;
     this.render();

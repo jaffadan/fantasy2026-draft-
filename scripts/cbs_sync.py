@@ -22,6 +22,61 @@ def ensure_dirs():
     os.makedirs(os.path.dirname(SESSION_FILE), exist_ok=True)
     os.makedirs(os.path.dirname(PUBLIC_OUTPUT_FILE), exist_ok=True)
 
+def parse_and_save_cookies(cookie_string):
+    ensure_dirs()
+    cookies = []
+    pairs = [p.strip() for p in cookie_string.split(';') if p.strip()]
+    now = time.time()
+    
+    for pair in pairs:
+        if '=' in pair:
+            name, val = pair.split('=', 1)
+            cookies.append({
+                "name": name.strip(),
+                "value": val.strip(),
+                "domain": ".cbssports.com",
+                "path": "/",
+                "expires": now + (86400 * 90),
+                "httpOnly": False,
+                "secure": True,
+                "sameSite": "Lax"
+            })
+            # Also add for specific subdomain
+            cookies.append({
+                "name": name.strip(),
+                "value": val.strip(),
+                "domain": "nefjbffl.football.cbssports.com",
+                "path": "/",
+                "expires": now + (86400 * 90),
+                "httpOnly": False,
+                "secure": True,
+                "sameSite": "Lax"
+            })
+
+    state_obj = {
+        "cookies": cookies,
+        "origins": [
+            {
+                "origin": "https://nefjbffl.football.cbssports.com",
+                "localStorage": []
+            }
+        ]
+    }
+
+    with open(SESSION_FILE, 'w', encoding='utf-8') as f:
+        json.dump(state_obj, f, indent=2)
+
+    public_session = os.path.join(os.path.dirname(__file__), '..', 'public', 'data', 'cbs_session.json')
+    try:
+        os.makedirs(os.path.dirname(public_session), exist_ok=True)
+        with open(public_session, 'w', encoding='utf-8') as f:
+            json.dump(state_obj, f, indent=2)
+    except Exception:
+        pass
+
+    print(f'✅ Successfully saved {len(pairs)} session cookies to {SESSION_FILE}')
+    return True
+
 def interactive_login():
     from playwright.sync_api import sync_playwright
     ensure_dirs()
@@ -35,8 +90,17 @@ def interactive_login():
     print('--------------------------------------------------------')
 
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=False, args=['--start-maximized'])
-        context = browser.new_context(no_viewport=True)
+        browser = None
+        try:
+            browser = p.chromium.launch(headless=False, channel='chrome', args=['--start-maximized'])
+        except Exception:
+            try:
+                browser = p.chromium.launch(headless=False, args=['--start-maximized'])
+            except Exception as e:
+                print(f'Browser launch error: {e}')
+                return
+
+        context = browser.new_context(viewport=None)
         page = context.new_page()
 
         try:
@@ -46,23 +110,19 @@ def interactive_login():
 
         print('Browser is open. Waiting for you to log in... (Close browser when finished)')
         
-        # Keep open until user closes the window or timeout (15 mins)
         start_time = time.time()
         max_duration = 900  # 15 minutes
         last_saved = 0
 
         while time.time() - start_time < max_duration:
             try:
-                # Check if all pages/windows are closed
                 if not context.pages:
                     print('\nBrowser window closed by user.')
                     break
 
-                # Periodically save state in case user logs in
                 if time.time() - last_saved > 3:
                     try:
                         context.storage_state(path=SESSION_FILE)
-                        # Also copy to public directory
                         if os.path.exists(SESSION_FILE):
                             public_session = os.path.join(os.path.dirname(__file__), '..', 'public', 'data', 'cbs_session.json')
                             os.makedirs(os.path.dirname(public_session), exist_ok=True)
@@ -77,7 +137,6 @@ def interactive_login():
             except Exception:
                 break
 
-        # Final save before closing
         try:
             context.storage_state(path=SESSION_FILE)
             print(f'✅ Login session successfully saved to: {SESSION_FILE}')
@@ -205,9 +264,12 @@ def main():
     parser = argparse.ArgumentParser(description='CBS Sports Fantasy Playwright Sync')
     parser.add_argument('--login', action='store_true', help='Open browser for interactive one-time login')
     parser.add_argument('--sync', action='store_true', help='Perform headless background scrape and sync')
+    parser.add_argument('--cookie', type=str, default='', help='Import session directly from cookie string')
     args = parser.parse_args()
 
-    if args.login:
+    if args.cookie:
+        parse_and_save_cookies(args.cookie)
+    elif args.login:
         interactive_login()
     else:
         sync_league_data()
