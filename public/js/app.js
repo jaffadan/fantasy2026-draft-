@@ -943,9 +943,22 @@ export class AuctionDraftApp {
 
     container.innerHTML = players.map(p => {
       const dynVal = this.engine.getDynamicPlayerValue(p, inflation.inflationRate);
+      const cached = this.gemini.getCachedNews(p.id, p.name);
+      const valCat = cached && cached.valueCategory ? cached.valueCategory.toUpperCase() : (p.notes && p.notes.includes('SMASH') ? 'SMASH VALUE' : p.notes && p.notes.includes('VALUE PICK') ? 'PRIME TARGET' : p.notes && p.notes.includes('SLEEPER') ? 'SLEEPER GEM' : '');
+      let valCatBadge = '';
+      if (valCat.includes('SMASH')) {
+        valCatBadge = '<span class="text-[9px] px-1 py-0.2 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 rounded shrink-0 font-black animate-pulse">🔥 SMASH</span>';
+      } else if (valCat.includes('PRIME') || valCat.includes('TARGET')) {
+        valCatBadge = '<span class="text-[9px] px-1 py-0.2 bg-blue-500/20 text-blue-300 border border-blue-500/40 rounded shrink-0 font-black">🎯 TARGET</span>';
+      } else if (valCat.includes('SLEEPER') || valCat.includes('GEM')) {
+        valCatBadge = '<span class="text-[9px] px-1 py-0.2 bg-purple-500/20 text-purple-300 border border-purple-500/40 rounded shrink-0 font-black">💎 SLEEPER</span>';
+      } else if (valCat.includes('OVERPRICED') || valCat.includes('TRAP')) {
+        valCatBadge = '<span class="text-[9px] px-1 py-0.2 bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded shrink-0 font-black">⚠️ TRAP</span>';
+      }
+
       return `
         <div class="flex items-center justify-between p-2 rounded-xl bg-slate-900/60 border border-slate-800/60 hover:bg-slate-800/60 hover:border-slate-700 transition-all text-xs gap-2">
-          <div class="flex items-center gap-2.5 min-w-0 max-w-[200px] shrink-0">
+          <div class="flex items-center gap-2 min-w-0 max-w-[220px] shrink-0 flex-wrap sm:flex-nowrap">
             <button onclick="window.app.toggleStar('${p.id}')" class="${p.isStarred ? 'text-amber-400' : 'text-slate-600 hover:text-slate-400'} shrink-0">
               <i data-lucide="star" class="w-3.5 h-3.5 ${p.isStarred ? 'fill-current' : ''}"></i>
             </button>
@@ -954,6 +967,7 @@ export class AuctionDraftApp {
               <span class="font-bold text-slate-200">${p.name}</span>
               <span class="text-[10px] text-slate-400 ml-1">${p.team}</span>
             </div>
+            ${valCatBadge}
             ${p.isRookie ? '<span class="text-[9px] px-1 bg-amber-500/20 text-amber-300 rounded shrink-0 font-bold">R</span>' : ''}
           </div>
 
@@ -1133,7 +1147,19 @@ export class AuctionDraftApp {
       const injuryStr = (cachedNews && cachedNews.injuryStatus) ? cachedNews.injuryStatus : (p.injury || '');
       const isInjured = injuryStr && (injuryStr.toLowerCase().includes('out') || injuryStr.toLowerCase().includes('ir') || injuryStr.toLowerCase().includes('elevated') || injuryStr.toLowerCase().includes('quest') || injuryStr.toLowerCase().includes('risk'));
 
-      const tierScarcity = !p.drafted ? this.engine.getTierScarcity(p, this.store.state.players) : null;
+      const valCat = cachedNews && cachedNews.valueCategory ? cachedNews.valueCategory.toUpperCase() : (p.notes && p.notes.includes('SMASH') ? 'SMASH VALUE' : p.notes && p.notes.includes('VALUE PICK') ? 'PRIME TARGET' : p.notes && p.notes.includes('SLEEPER') ? 'SLEEPER GEM' : '');
+      let valCatBadge = '';
+      if (valCat.includes('SMASH')) {
+        valCatBadge = '<span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 animate-pulse flex items-center gap-0.5">🔥 SMASH</span>';
+      } else if (valCat.includes('PRIME') || valCat.includes('TARGET')) {
+        valCatBadge = '<span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-blue-500/20 text-blue-300 border border-blue-500/40 flex items-center gap-0.5">🎯 TARGET</span>';
+      } else if (valCat.includes('SLEEPER') || valCat.includes('GEM')) {
+        valCatBadge = '<span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-purple-500/20 text-purple-300 border border-purple-500/40 flex items-center gap-0.5">💎 SLEEPER</span>';
+      } else if (valCat.includes('OVERPRICED') || valCat.includes('TRAP')) {
+        valCatBadge = '<span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-0.5">⚠️ TRAP</span>';
+      } else if (valCat.includes('DND') || valCat.includes('DO NOT')) {
+        valCatBadge = '<span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-rose-500/20 text-rose-300 border border-rose-500/40 flex items-center gap-0.5">🛑 DND</span>';
+      }
 
       return `
         <tr class="${rowClass}">
@@ -1153,6 +1179,7 @@ export class AuctionDraftApp {
               <span class="font-bold text-slate-100 hover:text-blue-400 cursor-pointer" onclick="window.app.openPlayerModal('${p.id}')">
                 ${p.name}
               </span>
+              ${valCatBadge}
               ${p.isRookie ? '<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">ROOKIE</span>' : ''}
               ${tierScarcity ? `<span class="px-1.5 py-0.2 rounded text-[9px] font-black ${tierScarcity.isCliff ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50 animate-pulse' : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'}" title="${tierScarcity.alertMessage}">${tierScarcity.isCliff ? '🔥 1 LEFT' : '⚠️ 2 LEFT'}</span>` : ''}
               ${isInjured ? `<span class="px-1.5 py-0.2 rounded text-[9px] font-black bg-rose-500/20 text-rose-300 border border-rose-500/40 animate-pulse" title="Injury Status: ${injuryStr}">⚠️ ${injuryStr}</span>` : ''}
@@ -1748,15 +1775,41 @@ export class AuctionDraftApp {
     const dynVal = this.engine.getDynamicPlayerValue(player, inflation.inflationRate);
     const userTeam = this.store.getUserTeam();
     const advice = this.engine.getBiddingAdvice(player, userTeam, inflation.inflationRate);
+    const cached = this.gemini.getCachedNews(player.id, player.name);
+
+    const valCat = cached && cached.valueCategory ? cached.valueCategory.toUpperCase() : (player.notes && player.notes.includes('SMASH') ? 'SMASH VALUE' : player.notes && player.notes.includes('VALUE PICK') ? 'PRIME TARGET' : player.notes && player.notes.includes('SLEEPER') ? 'SLEEPER GEM' : 'FAIR VALUE');
+    let valCatBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 text-slate-300 border border-slate-700">⚖️ FAIR VALUE</span>';
+    if (valCat.includes('SMASH')) {
+      valCatBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 animate-pulse flex items-center gap-1">🔥 SMASH VALUE</span>';
+    } else if (valCat.includes('PRIME') || valCat.includes('TARGET')) {
+      valCatBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-blue-500/20 text-blue-300 border border-blue-500/40 flex items-center gap-1">🎯 PRIME TARGET</span>';
+    } else if (valCat.includes('SLEEPER') || valCat.includes('GEM')) {
+      valCatBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-purple-500/20 text-purple-300 border border-purple-500/40 flex items-center gap-1">💎 SLEEPER GEM</span>';
+    } else if (valCat.includes('OVERPRICED') || valCat.includes('TRAP')) {
+      valCatBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1">⚠️ OVERPRICED TRAP</span>';
+    } else if (valCat.includes('DND') || valCat.includes('DO NOT')) {
+      valCatBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-rose-500/20 text-rose-300 border border-rose-500/40 flex items-center gap-1">🛑 DO NOT DRAFT</span>';
+    }
+
+    const aiVal = (cached && cached.predictiveValue) ? cached.predictiveValue : player.baselineVal;
+    const delta = aiVal - player.baselineVal;
+    const deltaStr = delta > 0 ? `+${delta}` : `${delta}`;
+    const deltaBadge = delta !== 0
+      ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${delta > 0 ? 'text-emerald-300 bg-emerald-950/60 border border-emerald-700/50' : 'text-amber-300 bg-amber-950/60 border border-amber-700/50'}">${deltaStr} vs Base</span>`
+      : '';
 
     content.innerHTML = `
       <div class="space-y-4">
-        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3 flex-wrap gap-2">
           <div class="flex items-center gap-3">
             <span class="px-3 py-1 rounded-xl text-xs font-black uppercase badge-${player.pos.toLowerCase()}">${player.pos}</span>
             <div>
-              <h2 class="text-xl font-black text-white">${player.name}</h2>
-              <div class="text-xs text-slate-400 flex items-center gap-2">
+              <div class="flex items-center gap-2 flex-wrap">
+                <h2 class="text-xl font-black text-white">${player.name}</h2>
+                ${valCatBadge}
+                ${player.isRookie ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">ROOKIE</span>' : ''}
+              </div>
+              <div class="text-xs text-slate-400 flex items-center gap-2 mt-0.5">
                 <span class="font-bold text-slate-300">${player.team}</span>
                 <span>•</span>
                 <span>Bye Week ${player.bye || 'None'}</span>
@@ -1773,35 +1826,39 @@ export class AuctionDraftApp {
           </div>
         </div>
 
-        <div class="grid grid-cols-4 gap-3 text-center">
+        <!-- 5-Card Valuation Grid with AI Predictive $ -->
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5 text-center">
           <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-            <div class="text-[10px] text-slate-400 uppercase">Baseline $</div>
+            <div class="text-[10px] text-slate-400 uppercase font-medium">Baseline $</div>
             <div class="text-base font-bold font-mono text-slate-200">$${player.baselineVal}</div>
           </div>
+          <div class="bg-slate-950 p-2.5 rounded-xl border border-indigo-500/40 bg-indigo-950/20 shadow-inner">
+            <div class="text-[10px] text-indigo-300 uppercase font-bold flex items-center justify-center gap-1"><i data-lucide="sparkles" class="w-3 h-3 text-indigo-400"></i> AI Value $</div>
+            <div class="text-base font-black font-mono text-emerald-300">$${aiVal}</div>
+          </div>
           <div class="bg-slate-950 p-2.5 rounded-xl border border-blue-900/50">
-            <div class="text-[10px] text-blue-400 uppercase">Dynamic $</div>
-            <div class="text-base font-black font-mono text-emerald-400">$${dynVal}</div>
+            <div class="text-[10px] text-blue-400 uppercase font-medium">Dynamic $</div>
+            <div class="text-base font-black font-mono text-blue-400">$${dynVal}</div>
           </div>
           <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-            <div class="text-[10px] text-slate-400 uppercase">Target Range</div>
-            <div class="text-sm font-bold font-mono text-slate-200">${player.targetRange || `$${player.baselineVal}`}</div>
+            <div class="text-[10px] text-slate-400 uppercase font-medium">Target Range</div>
+            <div class="text-sm font-bold font-mono text-emerald-400">${(cached && cached.targetBidRange) ? cached.targetBidRange : (player.targetRange || `$${player.baselineVal}`)}</div>
           </div>
           <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-            <div class="text-[10px] text-slate-400 uppercase">Hard Max</div>
-            <div class="text-base font-bold font-mono text-amber-400">$${player.hardMax}</div>
+            <div class="text-[10px] text-slate-400 uppercase font-medium">Hard Max</div>
+            <div class="text-base font-bold font-mono text-amber-400">$${(cached && cached.maxBidCeiling) ? cached.maxBidCeiling : player.hardMax}</div>
           </div>
         </div>
 
         <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-xs space-y-2">
           <div class="flex items-center justify-between">
-            <span class="text-slate-400">Health & Injury Status:</span>
+            <span class="text-slate-400 font-semibold">Health & Injury Status:</span>
             ${(() => {
-              const cached = this.gemini.getCachedNews(player.id, player.name);
               const inj = (cached && cached.injuryStatus) ? cached.injuryStatus : (player.injury || 'Healthy');
               const isInj = inj.toLowerCase().includes('out') || inj.toLowerCase().includes('ir') || inj.toLowerCase().includes('elevated') || inj.toLowerCase().includes('quest') || inj.toLowerCase().includes('risk');
               return isInj 
-                ? `<span class="px-2 py-0.5 rounded text-[10px] font-black bg-rose-500/20 text-rose-300 border border-rose-500/40">⚠️ ${inj}</span>`
-                : `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">🟢 100% Healthy / Active</span>`;
+                ? `<span class="px-2 py-0.5 rounded text-[10px] font-black bg-rose-500/20 text-rose-300 border border-rose-500/40 animate-pulse flex items-center gap-1"><i data-lucide="alert-triangle" class="w-3 h-3 text-rose-400"></i> ${inj}</span>`
+                : `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1"><i data-lucide="check-circle-2" class="w-3 h-3 text-emerald-400"></i> 100% Healthy / Active</span>`;
             })()}
           </div>
           <div class="text-slate-400">Team Offense & Quality: <b class="text-slate-200">${player.offense || 'Standard'}</b></div>
@@ -1812,7 +1869,6 @@ export class AuctionDraftApp {
         </div>
 
         ${(() => {
-          const cached = this.gemini.getCachedNews(player.id, player.name);
           if (!cached) {
             // If AI is configured, trigger automatic fetch for this player when opened!
             if (this.gemini.isConfigured() && !this.gemini.isCircuitBroken) {
@@ -1833,16 +1889,33 @@ export class AuctionDraftApp {
           }
           const isInj = cached.injuryStatus && (cached.injuryStatus.toLowerCase().includes('out') || cached.injuryStatus.toLowerCase().includes('ir') || cached.injuryStatus.toLowerCase().includes('elevated') || cached.injuryStatus.toLowerCase().includes('quest') || cached.injuryStatus.toLowerCase().includes('risk'));
           return `
-            <div class="p-3.5 rounded-xl ${isInj ? 'bg-rose-950/40 border border-rose-600/50' : 'bg-indigo-950/30 border border-indigo-500/30'} text-xs space-y-1.5">
-              <div class="flex items-center justify-between">
-                <span class="font-black text-indigo-300 flex items-center gap-1"><i data-lucide="sparkles" class="w-3.5 h-3.5 text-indigo-400"></i> AI Scouting & Health Intel (${cached.source || 'AI'})</span>
-                <span class="text-[10px] font-mono text-slate-400">Status: <b class="${isInj ? 'text-rose-300 font-bold' : 'text-emerald-300'}">${cached.injuryStatus || 'Healthy'}</b></span>
+            <div class="p-3.5 rounded-xl ${isInj ? 'bg-rose-950/40 border border-rose-600/50' : 'bg-indigo-950/30 border border-indigo-500/30'} text-xs space-y-2">
+              <div class="flex items-center justify-between flex-wrap gap-2">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="font-black text-indigo-300 flex items-center gap-1"><i data-lucide="sparkles" class="w-3.5 h-3.5 text-indigo-400"></i> AI Scouting & Health Intel (${cached.source || 'AI'})</span>
+                  ${valCatBadge}
+                  ${deltaBadge}
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-[10px] font-mono text-slate-400">Status: <b class="${isInj ? 'text-rose-300 font-bold' : 'text-emerald-300'}">${cached.injuryStatus || 'Healthy'}</b></span>
+                  <button onclick="window.app.gemini.fetchPlayerNews(window.app.store.state.players.find(p=>p.id==='${player.id}'), true).then(()=>{ window.app.openPlayerModal('${player.id}'); })" class="text-[10px] px-2 py-0.5 bg-indigo-900/60 hover:bg-indigo-700/80 text-indigo-200 border border-indigo-500/40 rounded flex items-center gap-1 transition-all" title="Rerun Fresh AI Beat Wire">
+                    <i data-lucide="refresh-cw" class="w-3 h-3"></i> Refresh
+                  </button>
+                </div>
               </div>
+
+              ${cached.hiddenEdge ? `
+                <div class="p-2 rounded-lg bg-amber-950/30 border border-amber-500/30 text-amber-200 text-[11px] flex items-start gap-1.5">
+                  <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5"></i>
+                  <span><b>Hidden Alpha / Beat Edge:</b> ${cached.hiddenEdge}</span>
+                </div>
+              ` : ''}
+
               <div class="font-bold text-slate-100">${cached.headline || ''}</div>
               <p class="text-slate-300 text-[11px] leading-relaxed">${cached.summary || ''}</p>
               <div class="text-[11px] text-indigo-200 pt-1 border-t border-indigo-500/20 flex items-center gap-1.5">
                 <i data-lucide="crosshair" class="w-3 h-3 text-indigo-400 shrink-0"></i>
-                <span><b>Advice:</b> ${cached.auctionAdvice || ''}</span>
+                <span><b>Tactical Advice:</b> ${cached.auctionAdvice || ''}</span>
               </div>
             </div>
           `;
