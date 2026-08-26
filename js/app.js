@@ -393,9 +393,12 @@ export class AuctionDraftApp {
     document.getElementById('rookie-search-input')?.addEventListener('input', () => this.renderRookieHub());
     document.getElementById('rookie-hide-drafted')?.addEventListener('change', () => this.renderRookieHub());
 
-    // AI Admin live search and filters
-    document.getElementById('ai-admin-search-input')?.addEventListener('input', () => this.renderAiAdmin());
-    document.getElementById('ai-admin-pos-filter')?.addEventListener('change', () => this.renderAiAdmin());
+    // Close any modal when clicking outside of modal content (on the backdrop overlay)
+    document.addEventListener('click', (e) => {
+      if (e.target && e.target.classList && e.target.classList.contains('modal-backdrop')) {
+        this.closeModals();
+      }
+    });
 
     // Keyboard Shortcuts
     document.addEventListener('keydown', (e) => {
@@ -1146,6 +1149,7 @@ export class AuctionDraftApp {
       const cachedNews = this.gemini.getCachedNews(p.id, p.name);
       const injuryStr = (cachedNews && cachedNews.injuryStatus) ? cachedNews.injuryStatus : (p.injury || '');
       const isInjured = injuryStr && (injuryStr.toLowerCase().includes('out') || injuryStr.toLowerCase().includes('ir') || injuryStr.toLowerCase().includes('elevated') || injuryStr.toLowerCase().includes('quest') || injuryStr.toLowerCase().includes('risk'));
+      const tierScarcity = !p.drafted ? this.engine.getTierScarcity(p, this.store.state.players) : null;
 
       const valCat = cachedNews && cachedNews.valueCategory ? cachedNews.valueCategory.toUpperCase() : (p.notes && p.notes.includes('SMASH') ? 'SMASH VALUE' : p.notes && p.notes.includes('VALUE PICK') ? 'PRIME TARGET' : p.notes && p.notes.includes('SLEEPER') ? 'SLEEPER GEM' : '');
       let valCatBadge = '';
@@ -1874,7 +1878,7 @@ export class AuctionDraftApp {
             if (this.gemini.isConfigured() && !this.gemini.isCircuitBroken) {
               setTimeout(() => {
                 this.gemini.fetchPlayerNews(player, false).then(() => {
-                  const modal = document.getElementById('player-detail-modal');
+                  const modal = document.getElementById('player-modal');
                   if (modal && !modal.classList.contains('hidden')) {
                     this.openPlayerModal(player.id);
                   }
@@ -2790,7 +2794,7 @@ export class AuctionDraftApp {
   }
 
   closeModals() {
-    document.querySelectorAll('.modal-backdrop').forEach(m => {
+    document.querySelectorAll('.modal-backdrop, #modal-cbs-cookie-import, #player-modal, #nominate-modal, #team-modal, #draft-order-modal, #sync-modal, #gemini-modal').forEach(m => {
       m.classList.add('hidden');
       m.classList.remove('flex');
     });
