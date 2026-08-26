@@ -3110,6 +3110,7 @@ export class AuctionDraftApp {
       }
 
       const aiVal = entry.predictiveValue || entry.baselineVal;
+      const posBadgeClass = `badge-${(entry.pos || 'flex').toLowerCase()}`;
 
       return `
         <div class="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 hover:border-indigo-500/40 transition-all space-y-2">
