@@ -77,6 +77,10 @@ export class DraftStore {
         console.error('Failed to load saved state, initializing fresh default', e);
         this.initDefault();
       }
+    } else {
+      this.initDefault();
+    }
+
     this.repairTeamRosterPrices();
     this.engine = new DraftEngine(this.state.rules, this.state.players, this.state.teams);
   }
