@@ -23,6 +23,7 @@ export class GeminiNewsService {
     this.maxFailures = 3;
     this.isCircuitBroken = false;
     this.attemptedPlayerIds = new Set();
+    this.hasServerKey = true;
 
     // Background High-Speed Parallel Pre-fetching Engine
     this.isPrefetching = false;
@@ -301,7 +302,8 @@ export class GeminiNewsService {
 
   isConfigured() {
     if (this.provider === 'local') return true;
-    return Boolean(this.apiKey) || Boolean(this.hasServerKey);
+    if (this.hasServerKey !== false) return true;
+    return Boolean(this.apiKey) || (this.cache && Object.keys(this.cache).length > 0);
   }
 
   /**

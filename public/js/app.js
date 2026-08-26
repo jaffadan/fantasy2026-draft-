@@ -1234,7 +1234,7 @@ export class AuctionDraftApp {
           <!-- Action -->
           <td class="p-3 text-center">
             ${isDrafted 
-              ? `<span class="text-[10px] font-bold text-slate-400 bg-slate-800 px-2 py-1 rounded">Drafted ($${p.draftedPrice} by ${winningTeam ? winningTeam.name : 'Team'})</span>`
+              ? `<span class="text-[10px] font-bold text-slate-400 bg-slate-800 px-2 py-1 rounded">Drafted ($${p.draftedPrice || p.price || 1} by ${winningTeam ? winningTeam.name : 'Team'})</span>`
               : `<button onclick="window.app.quickNominatePlayer('${p.id}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-[11px] shadow-sm">Nominate</button>`
             }
           </td>
@@ -1365,7 +1365,7 @@ export class AuctionDraftApp {
             <div class="flex items-center gap-4 text-right">
               <div>
                 <div class="text-xs font-mono font-bold text-blue-400">${p.projPts.toFixed(1)} pts</div>
-                <div class="text-[10px] text-slate-500 font-mono">Won for $${p.draftedPrice}</div>
+                <div class="text-[10px] text-slate-500 font-mono">Won for $${p.draftedPrice || p.price || 1}</div>
               </div>
             </div>
           </div>
@@ -1400,7 +1400,7 @@ export class AuctionDraftApp {
               <span class="font-bold text-slate-200 cursor-pointer hover:text-blue-400" onclick="window.app.openPlayerModal('${p.id}')">${p.name}</span>
               <span class="text-[10px] text-slate-500">${p.team}</span>
             </div>
-            <div class="text-right font-mono font-bold text-emerald-400">$${p.draftedPrice}</div>
+            <div class="text-right font-mono font-bold text-emerald-400">$${p.draftedPrice || p.price || 1}</div>
           </div>
         `;
       } else {
@@ -1419,7 +1419,7 @@ export class AuctionDraftApp {
     const allDrafted = [...Object.values(starters).flat(), ...bench];
     allDrafted.forEach(p => {
       if (posTotals[p.pos] !== undefined) {
-        posTotals[p.pos] += (p.draftedPrice || 0);
+        posTotals[p.pos] += (p.draftedPrice || p.price || 0);
       }
     });
 
@@ -1580,7 +1580,7 @@ export class AuctionDraftApp {
           <!-- Roster Tags -->
           <div class="flex flex-wrap gap-1 pt-1 border-t border-slate-800/80">
             ${allPlayers.slice(0, 6).map(p => `
-              <span class="text-[9px] px-1.5 py-0.5 rounded font-bold badge-${p.pos.toLowerCase()}">${p.pos} $${p.draftedPrice}</span>
+              <span class="text-[9px] px-1.5 py-0.5 rounded font-bold badge-${p.pos.toLowerCase()}">${p.pos} $${p.draftedPrice || p.price || 1}</span>
             `).join('')}
             ${allPlayers.length > 6 ? `<span class="text-[9px] text-slate-500 font-mono">+${allPlayers.length - 6} more</span>` : ''}
           </div>
@@ -1680,7 +1680,7 @@ export class AuctionDraftApp {
             <span class="text-[10px] font-bold text-amber-400 bg-amber-950/40 px-2 py-0.5 rounded border border-amber-800/60">${r.tier}</span>
             ${isDrafted 
               ? `<span class="text-[11px] font-bold text-slate-400 bg-slate-800/90 border border-slate-700 px-3 py-1.5 rounded-xl flex items-center gap-1.5">
-                  <i data-lucide="check" class="w-3.5 h-3.5 text-emerald-400"></i> Won for $${p.draftedPrice} by ${winningTeam ? winningTeam.name : 'Team'}
+                  <i data-lucide="check" class="w-3.5 h-3.5 text-emerald-400"></i> Won for $${p.draftedPrice || p.price || 1} by ${winningTeam ? winningTeam.name : 'Team'}
                  </span>`
               : `<button onclick="window.app.quickNominateByName('${r.name}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1">
                   <i data-lucide="gavel" class="w-3 h-3"></i> Nominate for Bid
@@ -1997,7 +1997,7 @@ export class AuctionDraftApp {
               </div>
               <div class="flex items-center gap-3">
                 <span class="font-mono text-blue-400">${p.projPts.toFixed(1)} pts</span>
-                <span class="font-mono font-bold text-emerald-400">$${p.draftedPrice}</span>
+                <span class="font-mono font-bold text-emerald-400">$${p.draftedPrice || p.price || 1}</span>
               </div>
             </div>
           `).join('')}
@@ -2012,22 +2012,10 @@ export class AuctionDraftApp {
   // --- GEMINI AI LIVE NEWS & INTELLIGENCE ---
 
   renderGeminiNewsCard(player) {
-    if (!this.gemini.isConfigured()) {
-      return `
-        <div class="flex items-center justify-between gap-3 text-xs">
-          <div class="flex items-center gap-2 text-indigo-300">
-            <i data-lucide="sparkles" class="w-4 h-4 text-indigo-400"></i>
-            <span><b>Draft AI News:</b> Enable real-time breaking news & scouting intel (Gemini or Local Model).</span>
-          </div>
-          <button onclick="window.app.openGeminiModal()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold text-[11px] shrink-0 shadow-sm">
-            Configure AI
-          </button>
-        </div>
-      `;
-    }
+    const news = this.activeNominationNews || this.gemini.getCachedNews(player);
 
     // Circuit Breaker: 3 consecutive failures reached -> Halt looping
-    if (this.gemini.isCircuitBroken) {
+    if (this.gemini.isCircuitBroken && !news) {
       return `
         <div class="flex items-center justify-between gap-3 text-xs bg-rose-950/30 p-2.5 rounded-lg border border-rose-800/60">
           <div class="flex items-center gap-2 text-rose-300">
@@ -2046,17 +2034,19 @@ export class AuctionDraftApp {
       `;
     }
 
-    if (this.isLoadingNews) {
-      const providerLabel = this.gemini.provider === 'local' ? `Local ${this.gemini.localModel}` : 'Gemini';
+    if (!news && !this.gemini.isConfigured()) {
       return `
-        <div class="flex items-center gap-3 text-xs text-indigo-300 py-1">
-          <div class="animate-spin rounded-full h-4 w-4 border-2 border-indigo-400 border-t-transparent"></div>
-          <span class="italic font-medium">${providerLabel} is generating scouting intel & status for ${player.name}...</span>
+        <div class="flex items-center justify-between gap-3 text-xs">
+          <div class="flex items-center gap-2 text-indigo-300">
+            <i data-lucide="sparkles" class="w-4 h-4 text-indigo-400"></i>
+            <span><b>Draft AI News:</b> Enable real-time breaking news & scouting intel (Gemini or Local Model).</span>
+          </div>
+          <button onclick="window.app.openGeminiModal()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold text-[11px] shrink-0 shadow-sm">
+            Configure AI
+          </button>
         </div>
       `;
     }
-
-    const news = this.activeNominationNews || this.gemini.getCachedNews(player);
 
     if (this.isLoadingNews) {
       const providerLabel = this.gemini.provider === 'local' ? `Local ${this.gemini.localModel}` : 'Gemini Live Intel';

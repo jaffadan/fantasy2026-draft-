@@ -77,10 +77,7 @@ export class DraftStore {
         console.error('Failed to load saved state, initializing fresh default', e);
         this.initDefault();
       }
-    } else {
-      this.initDefault();
-    }
-
+    this.repairTeamRosterPrices();
     this.engine = new DraftEngine(this.state.rules, this.state.players, this.state.teams);
   }
 
@@ -216,6 +213,7 @@ export class DraftStore {
       statusFilter: localStatusFilter || remoteState.statusFilter || 'ALL'
     };
 
+    this.repairTeamRosterPrices();
     this.engine = new DraftEngine(this.state.rules, this.state.players, this.state.teams);
 
     try {
@@ -310,18 +308,21 @@ export class DraftStore {
       console.warn(`Price ($${finalPrice}) exceeds max legal bid ($${maxAllowed}) for ${team.name}`);
     }
 
-    // Assign slot
-    const slotAssignment = this.engine.assignRosterSlot(team.roster, player);
+    // Build fully assigned player object before assigning to roster
     const assignedPlayer = {
       ...player,
       drafted: true,
       draftedTeamId: team.id,
       draftedPrice: finalPrice,
-      draftPickNumber: this.state.currentPickNumber,
-      rosterSlot: slotAssignment.slot
+      price: finalPrice,
+      draftPickNumber: this.state.currentPickNumber
     };
 
-    // Update player
+    // Assign slot with assignedPlayer containing the final draftedPrice
+    const slotAssignment = this.engine.assignRosterSlot(team.roster, assignedPlayer);
+    assignedPlayer.rosterSlot = slotAssignment.slot;
+
+    // Update player in main player pool
     this.state.players[playerIndex] = assignedPlayer;
 
     // Update team & optimize roster slots
@@ -352,6 +353,7 @@ export class DraftStore {
     this.state.currentNomination = null;
     this.state.redoHistory = []; // Reset redo stack on new pick
 
+    this.repairTeamRosterPrices();
     this.save();
     return true;
   }
@@ -410,15 +412,17 @@ export class DraftStore {
     const player = this.state.players[playerIndex];
     const team = this.state.teams[teamIndex];
 
-    const slotAssignment = this.engine.assignRosterSlot(team.roster, player);
     const assignedPlayer = {
       ...player,
       drafted: true,
       draftedTeamId: team.id,
       draftedPrice: pickToRedo.price,
-      draftPickNumber: pickToRedo.pickNumber,
-      rosterSlot: slotAssignment.slot
+      price: pickToRedo.price,
+      draftPickNumber: pickToRedo.pickNumber
     };
+
+    const slotAssignment = this.engine.assignRosterSlot(team.roster, assignedPlayer);
+    assignedPlayer.rosterSlot = slotAssignment.slot;
 
     this.state.players[playerIndex] = assignedPlayer;
     team.spent += pickToRedo.price;
@@ -428,8 +432,46 @@ export class DraftStore {
     this.state.currentPickNumber = pickToRedo.pickNumber + 1;
     this.state.currentNomination = null;
 
+    this.repairTeamRosterPrices();
     this.save();
     return true;
+  }
+
+  repairTeamRosterPrices() {
+    if (!this.state || !this.state.teams || !this.state.players) return;
+    const playerMap = new Map();
+    this.state.players.forEach(p => {
+      if (p.id) playerMap.set(p.id, p);
+      if (p.name) playerMap.set(p.name.toLowerCase().trim(), p);
+    });
+
+    this.state.teams.forEach(team => {
+      if (!team.roster) return;
+      const starters = team.roster.starters || {};
+      const bench = team.roster.bench || [];
+      
+      const fixPlayer = (p) => {
+        if (!p) return;
+        const stateP = playerMap.get(p.id) || playerMap.get((p.name || '').toLowerCase().trim());
+        if (stateP && stateP.draftedPrice !== null && stateP.draftedPrice !== undefined) {
+          p.draftedPrice = stateP.draftedPrice;
+          p.price = stateP.draftedPrice;
+        } else if (p.draftedPrice === null || p.draftedPrice === undefined) {
+          const hist = this.state.draftHistory ? this.state.draftHistory.find(h => h.playerId === p.id || h.playerName === p.name) : null;
+          const assignedPrice = hist ? hist.price : (p.price || p.baselineVal || 1);
+          p.draftedPrice = assignedPrice;
+          p.price = assignedPrice;
+          if (stateP && (stateP.draftedPrice === null || stateP.draftedPrice === undefined)) {
+            stateP.draftedPrice = assignedPrice;
+          }
+        }
+      };
+
+      Object.values(starters).forEach(arr => {
+        if (Array.isArray(arr)) arr.forEach(fixPlayer);
+      });
+      if (Array.isArray(bench)) bench.forEach(fixPlayer);
+    });
   }
 
   /**
