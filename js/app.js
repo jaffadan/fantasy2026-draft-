@@ -679,10 +679,14 @@ export class AuctionDraftApp {
         ` : ''}
 
         <!-- Valuation Grid -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
           <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-center">
-            <div class="text-[10px] text-slate-400 uppercase font-medium">Baseline Value</div>
+            <div class="text-[10px] text-slate-400 uppercase font-medium">Baseline $</div>
             <div class="text-lg font-black font-mono text-slate-200 mt-0.5">$${player.baselineVal}</div>
+          </div>
+          <div class="bg-slate-950 p-3 rounded-xl border border-indigo-500/40 text-center bg-indigo-950/20 shadow-inner">
+            <div class="text-[10px] text-indigo-300 uppercase font-bold flex items-center justify-center gap-1"><i data-lucide="sparkles" class="w-3 h-3 text-indigo-400"></i> AI Predictive $</div>
+            <div class="text-lg font-black font-mono text-emerald-300 mt-0.5">$${(news && news.predictiveValue) ? news.predictiveValue : player.baselineVal}</div>
           </div>
           <div class="bg-slate-950 p-3 rounded-xl border border-blue-900/40 text-center">
             <div class="text-[10px] text-blue-400 uppercase font-medium">Dynamic Inflated $</div>
@@ -690,11 +694,11 @@ export class AuctionDraftApp {
           </div>
           <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-center">
             <div class="text-[10px] text-slate-400 uppercase font-medium">Target Bid Range</div>
-            <div class="text-sm font-bold font-mono text-emerald-400 mt-1">${player.targetRange || `$${player.baselineVal}`}</div>
+            <div class="text-sm font-bold font-mono text-emerald-400 mt-1">${(news && news.targetBidRange) ? news.targetBidRange : (player.targetRange || `$${player.baselineVal}`)}</div>
           </div>
           <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-center">
             <div class="text-[10px] text-slate-400 uppercase font-medium">Hard Max Ceiling</div>
-            <div class="text-lg font-black font-mono text-amber-400 mt-0.5">$${player.hardMax}</div>
+            <div class="text-lg font-black font-mono text-amber-400 mt-0.5">$${(news && news.maxBidCeiling) ? news.maxBidCeiling : player.hardMax}</div>
           </div>
         </div>
 
@@ -1997,11 +2001,33 @@ export class AuctionDraftApp {
           ? `<span class="px-2 py-0.5 rounded text-[10px] font-black bg-rose-500/20 text-rose-300 border border-rose-500/40 flex items-center gap-1 animate-pulse"><i data-lucide="alert-triangle" class="w-3 h-3 text-rose-400"></i> ${injuryStr}</span>`
           : `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1"><i data-lucide="check-circle-2" class="w-3 h-3 text-emerald-400"></i> 100% Healthy</span>`;
 
+        const valCat = (news.valueCategory || 'FAIR VALUE').toUpperCase();
+        let valCatBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 text-slate-300 border border-slate-700">⚖️ FAIR VALUE</span>';
+        if (valCat.includes('SMASH')) {
+          valCatBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 animate-pulse flex items-center gap-1">🔥 SMASH VALUE</span>';
+        } else if (valCat.includes('PRIME') || valCat.includes('TARGET')) {
+          valCatBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-blue-500/20 text-blue-300 border border-blue-500/40 flex items-center gap-1">🎯 PRIME TARGET</span>';
+        } else if (valCat.includes('SLEEPER') || valCat.includes('GEM')) {
+          valCatBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-purple-500/20 text-purple-300 border border-purple-500/40 flex items-center gap-1">💎 SLEEPER GEM</span>';
+        } else if (valCat.includes('OVERPRICED') || valCat.includes('TRAP')) {
+          valCatBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1">⚠️ OVERPRICED TRAP</span>';
+        } else if (valCat.includes('DND') || valCat.includes('DO NOT')) {
+          valCatBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-rose-500/20 text-rose-300 border border-rose-500/40 flex items-center gap-1">🛑 DO NOT DRAFT</span>';
+        }
+
+        const aiVal = news.predictiveValue || player.baselineVal;
+        const delta = aiVal - player.baselineVal;
+        const deltaStr = delta > 0 ? `+${delta}` : `${delta}`;
+        const deltaBadge = delta !== 0
+          ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${delta > 0 ? 'text-emerald-300 bg-emerald-950/60 border border-emerald-700/50' : 'text-amber-300 bg-amber-950/60 border border-amber-700/50'}">${deltaStr} vs Base</span>`
+          : '';
+
         return `
-          <div class="space-y-2 text-xs">
+          <div class="space-y-2.5 text-xs">
             <div class="flex items-center justify-between flex-wrap gap-2 border-b border-indigo-500/20 pb-2">
               <div class="flex items-center gap-2 flex-wrap">
                 <span class="text-indigo-400 font-bold flex items-center gap-1 text-[11px] uppercase tracking-wider"><i data-lucide="sparkles" class="w-3.5 h-3.5 inline text-indigo-300"></i> Preloaded Intel</span>
+                ${valCatBadge}
                 ${healthStatusPill}
                 ${sentimentBadge}
               </div>
@@ -2011,6 +2037,29 @@ export class AuctionDraftApp {
                 </span>
               </div>
             </div>
+
+            <!-- AI Predictive Value Banner -->
+            <div class="p-2.5 rounded-lg bg-indigo-950/70 border border-indigo-500/40 flex items-center justify-between flex-wrap gap-2">
+              <div class="flex items-center gap-2">
+                <span class="text-[11px] text-indigo-300 font-bold uppercase tracking-wider">🤖 AI Predictive Value:</span>
+                <span class="text-base font-black font-mono text-emerald-300">$${aiVal}</span>
+                ${deltaBadge}
+              </div>
+              <div class="text-[11px] text-slate-300 font-mono flex items-center gap-3">
+                <span>Target: <b class="text-emerald-400">${news.targetBidRange || `$${aiVal}`}</b></span>
+                <span>Max Ceiling: <b class="text-amber-400">$${news.maxBidCeiling || player.hardMax || aiVal}</b></span>
+              </div>
+            </div>
+
+            ${news.hiddenEdge ? `
+              <div class="p-2.5 rounded-lg bg-amber-950/40 border border-amber-500/40 text-amber-200 text-xs flex items-start gap-2 shadow-sm">
+                <i data-lucide="zap" class="w-4 h-4 text-amber-400 shrink-0 mt-0.5"></i>
+                <div>
+                  <span class="font-black uppercase tracking-wider text-amber-300">⚡ HIDDEN ALPHA / BEAT INTEL:</span>
+                  <span class="text-amber-100 font-medium"> ${news.hiddenEdge}</span>
+                </div>
+              </div>
+            ` : ''}
 
             <div class="text-sm font-extrabold text-white">
               ${news.headline}
@@ -2022,7 +2071,7 @@ export class AuctionDraftApp {
 
             <div class="p-2 rounded-lg bg-indigo-950/60 border border-indigo-500/30 text-indigo-200 text-xs flex items-center gap-2">
               <i data-lucide="crosshair" class="w-3.5 h-3.5 text-indigo-400 shrink-0"></i>
-              <span><b>Draft Impact:</b> ${news.auctionAdvice}</span>
+              <span><b>Tactical Bidding:</b> ${news.auctionAdvice}</span>
             </div>
           </div>
         `;
@@ -2031,7 +2080,7 @@ export class AuctionDraftApp {
       return `
         <div class="flex items-center gap-3 text-xs text-indigo-300 py-2">
           <div class="animate-spin rounded-full h-4 w-4 border-2 border-indigo-400 border-t-transparent"></div>
-          <span class="italic font-medium">${providerLabel} is pulling real-time beat news & practice reports for ${player.name}...</span>
+          <span class="italic font-medium">${providerLabel} is analyzing league scoring & practice reports for ${player.name}...</span>
         </div>
       `;
     }
@@ -2053,7 +2102,7 @@ export class AuctionDraftApp {
         <div class="flex items-center justify-between text-xs text-indigo-300 py-1">
           <div class="flex items-center gap-2">
             <i data-lucide="sparkles" class="w-4 h-4 text-indigo-400"></i>
-            <span>Connecting to AI for real-time news & injury status...</span>
+            <span>Connecting to AI for real-time news & predictive valuation...</span>
           </div>
           <button onclick="window.app.fetchGeminiNewsForNomination(window.app.store.state.currentNomination.player, true)" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold text-[11px]">
             ⚡ Fetch Live Intel
@@ -2083,11 +2132,33 @@ export class AuctionDraftApp {
 
     const isFresh = Boolean(this.activeNominationNews);
 
+    const valCat = (news.valueCategory || 'FAIR VALUE').toUpperCase();
+    let valCatBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 text-slate-300 border border-slate-700">⚖️ FAIR VALUE</span>';
+    if (valCat.includes('SMASH')) {
+      valCatBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 animate-pulse flex items-center gap-1">🔥 SMASH VALUE</span>';
+    } else if (valCat.includes('PRIME') || valCat.includes('TARGET')) {
+      valCatBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-blue-500/20 text-blue-300 border border-blue-500/40 flex items-center gap-1">🎯 PRIME TARGET</span>';
+    } else if (valCat.includes('SLEEPER') || valCat.includes('GEM')) {
+      valCatBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-purple-500/20 text-purple-300 border border-purple-500/40 flex items-center gap-1">💎 SLEEPER GEM</span>';
+    } else if (valCat.includes('OVERPRICED') || valCat.includes('TRAP')) {
+      valCatBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1">⚠️ OVERPRICED TRAP</span>';
+    } else if (valCat.includes('DND') || valCat.includes('DO NOT')) {
+      valCatBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-rose-500/20 text-rose-300 border border-rose-500/40 flex items-center gap-1">🛑 DO NOT DRAFT</span>';
+    }
+
+    const aiVal = news.predictiveValue || player.baselineVal;
+    const delta = aiVal - player.baselineVal;
+    const deltaStr = delta > 0 ? `+${delta}` : `${delta}`;
+    const deltaBadge = delta !== 0
+      ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${delta > 0 ? 'text-emerald-300 bg-emerald-950/60 border border-emerald-700/50' : 'text-amber-300 bg-amber-950/60 border border-amber-700/50'}">${deltaStr} vs Base</span>`
+      : '';
+
     return `
-      <div class="space-y-2 text-xs">
+      <div class="space-y-2.5 text-xs">
         <div class="flex items-center justify-between flex-wrap gap-2 border-b border-indigo-500/20 pb-2">
           <div class="flex items-center gap-2 flex-wrap">
             ${providerBadge}
+            ${valCatBadge}
             ${healthStatusPill}
             ${sentimentBadge}
             ${isFresh ? '<span class="text-[10px] text-emerald-300 font-bold font-mono bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-700/60 flex items-center gap-1"><i data-lucide="zap" class="w-3 h-3 text-emerald-400"></i> Live Wire Verified</span>' : ''}
@@ -2100,12 +2171,35 @@ export class AuctionDraftApp {
           </div>
         </div>
 
+        <!-- AI Predictive Value Banner -->
+        <div class="p-2.5 rounded-lg bg-indigo-950/70 border border-indigo-500/40 flex items-center justify-between flex-wrap gap-2 shadow-sm">
+          <div class="flex items-center gap-2">
+            <span class="text-[11px] text-indigo-300 font-bold uppercase tracking-wider">🤖 AI Predictive Value:</span>
+            <span class="text-base font-black font-mono text-emerald-300">$${aiVal}</span>
+            ${deltaBadge}
+          </div>
+          <div class="text-[11px] text-slate-300 font-mono flex items-center gap-3">
+            <span>Target: <b class="text-emerald-400">${news.targetBidRange || `$${aiVal}`}</b></span>
+            <span>Max Ceiling: <b class="text-amber-400">$${news.maxBidCeiling || player.hardMax || aiVal}</b></span>
+          </div>
+        </div>
+
         ${isInjured ? `
           <div class="p-2.5 rounded-lg bg-rose-950/70 border border-rose-600/70 text-rose-200 text-xs flex items-start gap-2 shadow-sm">
             <i data-lucide="alert-octagon" class="w-4 h-4 text-rose-400 shrink-0 mt-0.5 animate-bounce"></i>
             <div>
               <span class="font-black uppercase tracking-wider text-rose-300">⚠️ CRITICAL INJURY WARNING:</span>
               <span class="text-rose-100 font-medium"> ${news.summary}</span>
+            </div>
+          </div>
+        ` : ''}
+
+        ${news.hiddenEdge ? `
+          <div class="p-2.5 rounded-lg bg-amber-950/40 border border-amber-500/40 text-amber-200 text-xs flex items-start gap-2 shadow-sm">
+            <i data-lucide="zap" class="w-4 h-4 text-amber-400 shrink-0 mt-0.5"></i>
+            <div>
+              <span class="font-black uppercase tracking-wider text-amber-300">⚡ HIDDEN ALPHA / BEAT INTEL:</span>
+              <span class="text-amber-100 font-medium"> ${news.hiddenEdge}</span>
             </div>
           </div>
         ` : ''}
@@ -2120,7 +2214,7 @@ export class AuctionDraftApp {
 
         <div class="p-2 rounded-lg bg-indigo-950/60 border border-indigo-500/30 text-indigo-200 text-xs flex items-center gap-2">
           <i data-lucide="crosshair" class="w-3.5 h-3.5 text-indigo-400 shrink-0"></i>
-          <span><b>Draft Impact:</b> ${news.auctionAdvice}</span>
+          <span><b>Tactical Bidding:</b> ${news.auctionAdvice}</span>
         </div>
 
         ${news.searchSources && news.searchSources.length > 0 ? `
@@ -2924,20 +3018,36 @@ export class AuctionDraftApp {
         ? '<span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-rose-500/20 text-rose-300 border border-rose-500/30">⚠️ RISK / FALLING</span>'
         : '<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 text-slate-300 border border-slate-700">🟢 STEADY</span>';
 
-      const posBadgeClass = `badge-${entry.pos.toLowerCase()}`;
+      const valCat = (entry.valueCategory || '').toUpperCase();
+      let valCatBadge = '';
+      if (valCat.includes('SMASH')) {
+        valCatBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 animate-pulse">🔥 SMASH</span>';
+      } else if (valCat.includes('PRIME') || valCat.includes('TARGET')) {
+        valCatBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-blue-500/20 text-blue-300 border border-blue-500/40">🎯 TARGET</span>';
+      } else if (valCat.includes('SLEEPER') || valCat.includes('GEM')) {
+        valCatBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-purple-500/20 text-purple-300 border border-purple-500/40">💎 SLEEPER</span>';
+      } else if (valCat.includes('OVERPRICED') || valCat.includes('TRAP')) {
+        valCatBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/40">⚠️ TRAP</span>';
+      } else if (valCat.includes('DND') || valCat.includes('DO NOT')) {
+        valCatBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-rose-500/20 text-rose-300 border border-rose-500/40">🛑 DND</span>';
+      }
+
+      const aiVal = entry.predictiveValue || entry.baselineVal;
 
       return `
         <div class="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 hover:border-indigo-500/40 transition-all space-y-2">
-          <div class="flex items-center justify-between gap-2">
-            <div class="flex items-center gap-2">
+          <div class="flex items-center justify-between gap-2 flex-wrap">
+            <div class="flex items-center gap-2 flex-wrap">
               <span class="badge ${posBadgeClass} text-[10px] px-2 py-0.5 rounded font-bold">${entry.pos}</span>
               <span class="font-extrabold text-white text-xs">${entry.playerName}</span>
               <span class="text-[11px] text-slate-400 font-mono">(${entry.team})</span>
+              ${valCatBadge}
               ${sentimentBadge}
               <span class="text-[10px] text-slate-400">Status: <b class="text-slate-200">${entry.injuryStatus || 'Active'}</b></span>
             </div>
 
             <div class="flex items-center gap-2 text-[10px] text-slate-400 font-mono">
+              <span class="px-2 py-0.5 bg-emerald-950/80 rounded border border-emerald-700/50 text-emerald-300 font-bold">AI: $${aiVal}</span>
               <span class="px-1.5 py-0.5 bg-slate-900 rounded border border-slate-800 text-indigo-300">⚡ ${entry.latencyMs || 400}ms</span>
               <span class="text-slate-500">${entry.timestamp}</span>
             </div>
@@ -2950,6 +3060,13 @@ export class AuctionDraftApp {
           <p class="text-[11px] text-slate-300 leading-relaxed">
             ${entry.summary || ''}
           </p>
+
+          ${entry.hiddenEdge ? `
+            <div class="p-2 rounded-lg bg-amber-950/30 border border-amber-500/30 text-amber-200 text-[11px] flex items-start gap-1.5">
+              <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5"></i>
+              <span><b>Hidden Edge:</b> ${entry.hiddenEdge}</span>
+            </div>
+          ` : ''}
 
           <div class="flex items-center justify-between text-[10px] text-slate-400 bg-indigo-950/30 p-2 rounded-lg border border-indigo-500/20">
             <div class="flex items-center gap-1 text-indigo-300">

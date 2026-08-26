@@ -365,52 +365,110 @@ export class GeminiNewsService {
     let prompt;
     if (player.pos === 'DST' || (player.name && (player.name.includes('Defense') || player.name.includes('Broncos') || player.name.includes('Steelers') || player.name.includes('Eagles') || player.name.includes('Ravens') || player.name.includes('49ers') || player.name.includes('Vikings') || player.name.includes('Texans') || player.name.includes('Bills') || player.name.includes('Jets') || player.name.includes('Cowboys') || player.name.includes('Chiefs') || player.name.includes('Lions') || player.name.includes('Chargers') || player.name.includes('Packers') || player.name.includes('Browns') || player.name.includes('Bears') || player.name.includes('Seahawks') || player.name.includes('Buccaneers') || player.name.includes('Dolphins') || player.name.includes('Colts') || player.name.includes('Rams') || player.name.includes('Saints') || player.name.includes('Jaguars') || player.name.includes('Falcons') || player.name.includes('Patriots') || player.name.includes('Bengals') || player.name.includes('Titans') || player.name.includes('Commanders') || player.name.includes('Giants') || player.name.includes('Cardinals') || player.name.includes('Raiders') || player.name.includes('Panthers')))) {
       prompt = `
-You are a real-time fantasy football defense/special teams analyst and high-stakes auction draft expert.
+You are a real-time fantasy football defense/special teams analyst and high-stakes auction draft strategist.
 Analyze the NFL Team Defense & Special Teams (DST) unit: ${player.name} (${player.team} Defense).
-Search specifically for the ${player.name} DEFENSIVE unit, defensive coordinator scheme changes, pass rush (sacks/pressures), secondary coverage health, turnover generation, special teams return touchdowns, and streaming schedule.
+
+LEAGUE CONTEXT:
+- 12 Teams, $200 Auction Cap ($2,400 total league spend).
+- Starting Defense: 1 DST slot.
+- Scoring: Sacks = 1 pt, Interceptions/Fumble Recoveries = 2 pts, Defensive TDs = 6 pts, Safeties = 2 pts, Turnover on Downs = 1 pt. Standard points/yards allowed brackets.
+- DST Auction Valuation Rule: Never spend more than $1-$3 on any DST.
+
+SEARCH & EVALUATE:
+Search specifically for the ${player.name} DEFENSIVE unit: defensive coordinator scheme changes, pass-rush pressure rate / sack floor, secondary coverage health/injuries, turnover generation, return game touchdowns, and early season streaming schedule (Weeks 1-4).
 
 Return ONLY a valid JSON object matching this schema (no markdown code blocks, pure JSON):
 {
-  "headline": "Short defensive unit headline (e.g. 'Front-Seven Pressure Floor High; Favorable Early Schedule') (max 12 words)",
-  "summary": "2-3 concise sentences detailing their pass rush strength, secondary health, turnover outlook, and fantasy streaming viability.",
+  "headline": "Short defensive headline (max 12 words)",
+  "summary": "2-3 concise sentences detailing pass rush strength, secondary health, turnover outlook, and fantasy streaming viability.",
+  "predictiveValue": 1,
+  "targetBidRange": "$1-$2",
+  "maxBidCeiling": 3,
+  "valueCategory": "PRIME TARGET" | "FAIR VALUE" | "STREAM / LATE $1" | "DO NOT DRAFT",
+  "hiddenEdge": "1-2 sentences on early season schedule match-ups, pass rush win rate, or turnover regression.",
   "injuryStatus": "Healthy" | "Minor / Probable" | "Questionable" | "Elevated Risk" | "Key Defensive Injuries",
   "draftSentiment": "RISING" | "FALLING" | "NEUTRAL",
-  "auctionAdvice": "One actionable tactical sentence on whether to pay up for this defense ($1-$3 range) or stream.",
+  "auctionAdvice": "One actionable tactical sentence on whether to pay $1-$2 for this defense or stream off waivers.",
   "source": "Primary defensive beat reporter or analyst name",
   "confidence": "HIGH" | "MEDIUM"
 }
 `;
     } else if (player.pos === 'K') {
       prompt = `
-You are a real-time fantasy football kicking specialist and auction draft analyst.
+You are a real-time fantasy football kicking specialist and auction draft strategist.
 Analyze the NFL starting kicker: ${player.name} (${player.pos}, ${player.team}).
-Search for the most recent news, field goal accuracy from 50+ yards, preseason kicking competitions, offensive drive volume, indoor dome advantage, and injury health for kicker ${player.name} on the ${player.team}.
+
+LEAGUE CONTEXT:
+- 12 Teams, $200 Auction Cap ($2,400 total league spend).
+- Starting Kicker: 1 K slot.
+- Scoring: Base FG = 3 pts, 40-49 yd FG = 4 pts (+1 bonus), 50+ yd FG = 5 pts (+2 bonus), Extra Point = 1 pt.
+- Kicker Auction Valuation Rule: Elite big legs on high-scoring offenses are worth $1-$3 max; never bid >$3.
+
+SEARCH & EVALUATE:
+Search for recent news, preseason competition, 50+ yard accuracy, offensive drive volume, indoor dome advantage, and injury health for kicker ${player.name} on the ${player.team}.
 
 Return ONLY a valid JSON object matching this schema (no markdown code blocks, pure JSON):
 {
   "headline": "Short kicker headline (max 12 words)",
-  "summary": "2-3 concise sentences detailing their leg range, indoor stadium factors, offensive scoring environment, and job security.",
+  "summary": "2-3 concise sentences detailing leg range, indoor stadium factors, offensive scoring environment, and job security.",
+  "predictiveValue": 1,
+  "targetBidRange": "$1-$2",
+  "maxBidCeiling": 3,
+  "valueCategory": "PRIME TARGET" | "FAIR VALUE" | "STREAM / LATE $1" | "DO NOT DRAFT",
+  "hiddenEdge": "1-2 sentences on 50+ yard field goal volume, dome schedule, or offensive red zone stall tendencies.",
   "injuryStatus": "Healthy" | "Minor / Probable" | "Questionable" | "Out / IR",
   "draftSentiment": "RISING" | "FALLING" | "NEUTRAL",
-  "auctionAdvice": "One actionable tactical sentence on how to price this kicker in a $200 auction draft ($1-$3 range).",
-  "source": "Primary news source or reporter name",
+  "auctionAdvice": "One actionable sentence on whether to secure for $1-$2 or take last $1 kicker.",
+  "source": "Primary news source or kicker beat reporter",
   "confidence": "HIGH" | "MEDIUM"
 }
 `;
     } else {
       prompt = `
-You are a real-time fantasy football injury expert and high-stakes auction draft analyst.
+You are a high-stakes fantasy football auction draft analyst, analytics director, and NFL beat insider.
 Analyze NFL player: ${player.name} (${player.pos}, ${player.team}).
-PRIORITY #1: Verify player health, active injuries, training camp/practice participation status (Full, Limited, DNP), surgeries, and soft tissue injury risks (hamstring, calf, groin, knee, ankle, shoulder).
+
+YOUR USER'S EXACT LEAGUE RULES & SCORING SYSTEM:
+1. Format: 12 Teams, $200 Auction Budget ($2,400 total league spend).
+2. Roster: 15 roster spots (9 Starters: 1 QB, 2 RB, 2 WR, 2 FLEX [RB/WR/TE], 1 K, 1 DST, 6 Bench).
+3. NO MANDATORY TE SLOT: Tight ends are ONLY eligible in the 2 FLEX spots alongside WRs and RBs. Do NOT overvalue mid/low TEs; only elite difference-makers (Bowers, McBride, Kittle) warrant draft capital above $10-$15.
+4. 6-POINT PASSING TOUCHDOWNS: Passing TDs are 6 pts (not standard 4 pts). This substantially boosts the predictive value of high-volume and dual-threat quarterbacks (Josh Allen, Lamar Jackson, Jalen Hurts, Jayden Daniels, Mahomes).
+5. DISTANCE BONUS SCORING MATRIX:
+   - 20-29 yards: +0.5 pts
+   - 30-39 yards: +1.0 pts
+   - 40-49 yards: +1.5 pts
+   - 50-59 yards: +2.0 pts
+   - 60-69 yards: +2.5 pts
+   - 70-79 yards: +3.0 pts
+   - 80-89 yards: +3.5 pts
+   - 90-99 yards: +4.0 pts
+   - 100+ yards: +4.5 pts
+   Explosive big-play/home-run threats (Gibbs, Achane, Ja'Marr Chase, Nico Collins, Malik Nabers, Brian Thomas Jr.) get massive value multipliers.
+6. 0.5 PPR, 1 pt per 10 rush/rec yds, 1 pt per 25 pass yds, 2 pt bonus at 200 rush/rec or 400 pass yds.
+
+CRITICAL HIDDEN INFORMATION TO SEARCH & EVALUATE:
+- Offensive Line & Protection Grade: Starting tackle/guard injuries, pass-block win rate, run-blocking continuity.
+- Scheme & Playcalling Tendencies: Pass Rate Over Expected (PROE), no-huddle pace, red-zone condensed sets vs spread.
+- High-Leverage Roles: Goal-line carry share vs vulture risk (goal-line backs / QB sneaks), 2-minute drill and 3rd down passing snap rates.
+- Target Funnel & Vacated Volume: Uncontested alpha target trees vs messy committee rotations.
+- Beat Reporter & Camp Intelligence: Practice participation (Full / Limited / DNP), 1st team reps, contract year motivation, soft-tissue injury recurrence risk (hamstrings, calves, groins have high 3-week reinjury rate).
+
+CALCULATE PREDICTIVE VALUE:
+Provide a calibrated integer dollar valuation ($1-$65) based strictly on this 12-team, $200 budget, 0.5 PPR, 6pt PaTD, Distance Bonus, 2-FLEX (no dedicated TE) system.
 
 Return ONLY a valid JSON object matching this schema (no markdown code blocks, pure JSON):
 {
-  "headline": "Short breaking news/health headline (max 12 words)",
-  "summary": "2-3 concise sentences detailing their current health/injury status, practice reps, snap volume, or target share outlook.",
+  "headline": "Short punchy breaking news/role headline (max 12 words)",
+  "summary": "2-3 concise sentences detailing current health, camp performance, snap volume, or target share outlook.",
+  "predictiveValue": 42,
+  "targetBidRange": "$38-$44",
+  "maxBidCeiling": 48,
+  "valueCategory": "SMASH VALUE" | "PRIME TARGET" | "FAIR VALUE" | "OVERPRICED TRAP" | "SLEEPER GEM" | "DO NOT DRAFT",
+  "hiddenEdge": "1-2 sentences of hidden game-winning intel (O-line ranking, goal-line touch share vs vulture risk, 2-min drill usage, scheme PROE, soft-tissue risk).",
   "injuryStatus": "Healthy" | "Minor / Probable" | "Questionable" | "Elevated Risk" | "Out / IR",
   "draftSentiment": "RISING" | "FALLING" | "NEUTRAL",
-  "auctionAdvice": "One actionable tactical sentence on how to price this player in a 12-team 0.5 PPR $200 auction cap draft, factoring in their health risk.",
-  "source": "Primary news source or reporter name (e.g. Athletic, ESPN, Team Beat Reporter)",
+  "auctionAdvice": "Actionable tactical bidding advice with exact price enforcement and nomination strategy.",
+  "source": "Primary beat reporter or analytics source",
   "confidence": "HIGH" | "MEDIUM"
 }
 `;
@@ -528,6 +586,11 @@ Return ONLY a valid JSON object matching this schema (no markdown code blocks, p
       pos: player.pos,
       team: player.team,
       baselineVal: player.baselineVal,
+      predictiveValue: successfulJson.predictiveValue || player.baselineVal,
+      valueCategory: successfulJson.valueCategory || 'FAIR VALUE',
+      hiddenEdge: successfulJson.hiddenEdge || '',
+      targetBidRange: successfulJson.targetBidRange || `$${player.baselineVal}`,
+      maxBidCeiling: successfulJson.maxBidCeiling || player.hardMax || player.baselineVal,
       headline: successfulJson.headline,
       summary: successfulJson.summary,
       sentiment: successfulJson.draftSentiment,
@@ -546,7 +609,7 @@ Return ONLY a valid JSON object matching this schema (no markdown code blocks, p
    */
   async fetchLocalModelNews(player) {
     const startTime = performance.now();
-    const prompt = `NFL Player Health & Auction Assessment: ${player.name} (${player.pos}, ${player.team}). Check injury status and practice reps. Return JSON only: {"headline":"6-10 words health headline","summary":"2 sentences on health, injury status, practice participation, and role","injuryStatus":"Healthy|Questionable|Elevated Risk|Out","draftSentiment":"RISING|FALLING|NEUTRAL","auctionAdvice":"1 sentence bid advice factoring health","source":"Local ${this.localModel}","confidence":"HIGH"}`;
+    const prompt = `You are a high-stakes auction draft analyst. Analyze NFL player: ${player.name} (${player.pos}, ${player.team}). Format: 12-team, $200 cap, 0.5 PPR, 6pt PaTD, distance bonuses, 2 FLEX (no mandatory TE). Return JSON only: {"headline":"6-10 words health headline","summary":"2 sentences on health, injury status, practice participation, and role","predictiveValue":${player.baselineVal},"targetBidRange":"$${Math.max(1, player.baselineVal-3)}-$${player.baselineVal+3}","maxBidCeiling":${player.hardMax || player.baselineVal + 5},"valueCategory":"SMASH VALUE|PRIME TARGET|FAIR VALUE|OVERPRICED TRAP|SLEEPER GEM","hiddenEdge":"1-2 sentences on O-line, goal line vs vulture risk, 2-min drill, or soft tissue risk","injuryStatus":"Healthy|Questionable|Elevated Risk|Out","draftSentiment":"RISING|FALLING|NEUTRAL","auctionAdvice":"1 sentence bid advice factoring health & rules","source":"Local ${this.localModel}","confidence":"HIGH"}`;
 
     let response;
     // 1. Try Ollama native endpoint: /api/generate with timeout
@@ -616,6 +679,11 @@ Return ONLY a valid JSON object matching this schema (no markdown code blocks, p
       parsedData = {
         headline: `${player.name} Local Scouting Report`,
         summary: rawText.slice(0, 200),
+        predictiveValue: player.baselineVal,
+        targetBidRange: `$${player.baselineVal}`,
+        maxBidCeiling: player.hardMax || player.baselineVal,
+        valueCategory: "FAIR VALUE",
+        hiddenEdge: "Role and workload consistent with baseline projections.",
         injuryStatus: "Healthy",
         draftSentiment: "NEUTRAL",
         auctionAdvice: `Target at around baseline value ($${player.baselineVal}).`,
@@ -636,6 +704,11 @@ Return ONLY a valid JSON object matching this schema (no markdown code blocks, p
       pos: player.pos,
       team: player.team,
       baselineVal: player.baselineVal,
+      predictiveValue: parsedData.predictiveValue || player.baselineVal,
+      valueCategory: parsedData.valueCategory || 'FAIR VALUE',
+      hiddenEdge: parsedData.hiddenEdge || '',
+      targetBidRange: parsedData.targetBidRange || `$${player.baselineVal}`,
+      maxBidCeiling: parsedData.maxBidCeiling || player.hardMax || player.baselineVal,
       headline: parsedData.headline,
       summary: parsedData.summary,
       sentiment: parsedData.draftSentiment,

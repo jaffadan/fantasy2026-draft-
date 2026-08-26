@@ -41,13 +41,17 @@ export class DraftStore {
           this.state.teams.forEach(t => t.isUser = (t.id === dcfcTeam.id));
         }
 
-        // Auto-merge any new seed players (e.g. upgraded 32 K and 32 DST - 344 total players)
+        // Auto-merge updated seed player data (baseline values, target ranges, hard max, projections, notes)
+        // while strictly preserving user draft actions (drafted status, pick price, team, star/dnd tags, custom notes)
         if (initialData.players && initialData.players.length > 0) {
           const currentMap = new Map();
-          (this.state.players || []).forEach(p => currentMap.set(p.name.toLowerCase().trim(), p));
+          (this.state.players || []).forEach(p => {
+            if (p.id) currentMap.set(String(p.id).toLowerCase().trim(), p);
+            if (p.name) currentMap.set(p.name.toLowerCase().trim(), p);
+          });
 
           const mergedPlayers = initialData.players.map((seedP, idx) => {
-            const existing = currentMap.get(seedP.name.toLowerCase().trim());
+            const existing = currentMap.get(String(seedP.id).toLowerCase().trim()) || (seedP.name ? currentMap.get(seedP.name.toLowerCase().trim()) : null);
             if (existing) {
               return {
                 ...seedP,
@@ -64,9 +68,9 @@ export class DraftStore {
             return { ...seedP, id: seedP.id || `p_${idx + 1}` };
           });
 
-          if (!this.state.players || this.state.players.length !== mergedPlayers.length) {
-            this.state.players = mergedPlayers;
-            this.save('Player dataset upgraded to 344 players');
+          this.state.players = mergedPlayers;
+          if (initialData.rules) {
+            this.state.rules = { ...this.state.rules, ...initialData.rules };
           }
         }
       } catch (e) {
