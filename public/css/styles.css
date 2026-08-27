@@ -1,141 +1,572 @@
-/* Custom styles & animations for Fantasy Auction Draft Assistant */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap');
+/* ==========================================================================
+   FANTASY 2026 AUCTION DRAFT COMMAND CENTER - STYLES & DESIGN SYSTEM
+   Featuring: Full Dark & Light Mode, Reactive Mobile Layout (Samsung S25 Ultra),
+   Glassmorphism, High-DPI AMOLED Contrast, and Micro-Animations.
+   ========================================================================== */
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
+
+/* --- CSS Variables: Design Tokens --- */
 :root {
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
+
+  /* Theme Tokens - Light Mode Default */
+  --bg-app: #f1f5f9;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #f8fafc;
+  --bg-glass: rgba(255, 255, 255, 0.88);
+  --bg-glass-strong: rgba(255, 255, 255, 0.96);
+  --border-subtle: rgba(203, 213, 225, 0.8);
+  --border-strong: rgba(148, 163, 184, 0.6);
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --text-subtle: #64748b;
+  --accent-blue: #2563eb;
+  --accent-emerald: #059669;
+  --accent-amber: #d97706;
+  --accent-indigo: #4f46e5;
+  --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.06), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
+  --glow-blue: 0 0 25px -4px rgba(37, 99, 235, 0.2);
+  --table-row-hover: rgba(241, 245, 249, 0.9);
+  --table-row-alt: rgba(248, 250, 252, 0.6);
+}
+
+/* Dark Mode Tokens */
+html.dark {
+  --bg-app: #070b14;
+  --bg-surface: #0f172a;
+  --bg-surface-elevated: #1e293b;
+  --bg-glass: rgba(15, 23, 42, 0.85);
+  --bg-glass-strong: rgba(15, 23, 42, 0.95);
+  --border-subtle: rgba(51, 65, 85, 0.6);
+  --border-strong: rgba(71, 85, 105, 0.8);
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-subtle: #64748b;
+  --accent-blue: #3b82f6;
+  --accent-emerald: #10b981;
+  --accent-amber: #f59e0b;
+  --accent-indigo: #6366f1;
+  --card-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), 0 2px 8px -2px rgba(0, 0, 0, 0.4);
+  --glow-blue: 0 0 30px -5px rgba(59, 130, 246, 0.25);
+  --table-row-hover: rgba(30, 41, 59, 0.6);
+  --table-row-alt: rgba(15, 23, 42, 0.4);
+}
+
+/* --- Base & Reset --- */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: var(--font-sans);
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
+  color-scheme: light dark;
 }
 
 body {
-  font-family: var(--font-sans);
-  background-color: #0b0f17;
-  color: #e2e8f0;
+  background-color: var(--bg-app);
+  color: var(--text-main);
   overflow-x: hidden;
+  min-height: 100vh;
+  min-height: 100dvh;
+  transition: background-color 0.25s ease, color 0.25s ease;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .font-mono {
   font-family: var(--font-mono);
 }
 
-/* Custom Scrollbars */
+/* --- Glassmorphism & Panel System --- */
+.glass-panel {
+  background: var(--bg-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--card-shadow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.glass-panel-glow {
+  background: var(--bg-glass-strong);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  box-shadow: var(--glow-blue);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+/* --- Mobile Navigation Scroll System --- */
+.nav-scroll-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.nav-tabs-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+  padding: 0.25rem 0.2rem;
+  width: 100%;
+}
+
+.nav-tabs-wrapper::-webkit-scrollbar {
+  display: none;
+}
+
+.tab-btn {
+  scroll-snap-align: start;
+  white-space: nowrap;
+  touch-action: manipulation;
+  user-select: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tab-btn:active {
+  transform: scale(0.96);
+}
+
+/* Active tab indicator glow */
+.tab-btn.active-tab {
+  box-shadow: 0 4px 14px -2px rgba(37, 99, 235, 0.45);
+}
+
+/* --- Positional Badges (Vibrant & High Contrast) --- */
+.badge-rb {
+  background-color: rgba(16, 185, 129, 0.18);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+html.dark .badge-rb {
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.badge-wr {
+  background-color: rgba(59, 130, 246, 0.18);
+  color: #2563eb;
+  border: 1px solid rgba(59, 130, 246, 0.4);
+}
+html.dark .badge-wr {
+  color: #60a5fa;
+  border-color: rgba(59, 130, 246, 0.4);
+}
+
+.badge-qb {
+  background-color: rgba(239, 68, 68, 0.18);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+html.dark .badge-qb {
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.badge-te {
+  background-color: rgba(168, 85, 247, 0.18);
+  color: #9333ea;
+  border: 1px solid rgba(168, 85, 247, 0.4);
+}
+html.dark .badge-te {
+  color: #c084fc;
+  border-color: rgba(168, 85, 247, 0.4);
+}
+
+.badge-k {
+  background-color: rgba(245, 158, 11, 0.18);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+html.dark .badge-k {
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.badge-dst {
+  background-color: rgba(100, 116, 139, 0.18);
+  color: #475569;
+  border: 1px solid rgba(100, 116, 139, 0.4);
+}
+html.dark .badge-dst {
+  color: #cbd5e1;
+  border-color: rgba(148, 163, 184, 0.4);
+}
+
+.badge-flex {
+  background-color: rgba(236, 72, 153, 0.18);
+  color: #db2777;
+  border: 1px solid rgba(236, 72, 153, 0.4);
+}
+html.dark .badge-flex {
+  color: #f472b6;
+  border-color: rgba(236, 72, 153, 0.4);
+}
+
+/* --- Tier Badges --- */
+.tier-1 {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(234, 88, 12, 0.2));
+  color: #b45309;
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  font-weight: 700;
+}
+html.dark .tier-1 {
+  color: #facc15;
+}
+
+.tier-2 {
+  background: rgba(59, 130, 246, 0.18);
+  color: #1d4ed8;
+  border: 1px solid rgba(59, 130, 246, 0.4);
+}
+html.dark .tier-2 {
+  color: #93c5fd;
+}
+
+.tier-3 {
+  background: rgba(16, 185, 129, 0.18);
+  color: #047857;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+html.dark .tier-3 {
+  color: #6ee7b7;
+}
+
+.tier-4 {
+  background: rgba(148, 163, 184, 0.18);
+  color: #475569;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+}
+html.dark .tier-4 {
+  color: #94a3b8;
+}
+
+/* --- Light Mode Specific Overrides for Tailwind Components --- */
+html:not(.dark) body {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+html:not(.dark) header {
+  background: rgba(255, 255, 255, 0.94) !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 4px 15px -1px rgba(0, 0, 0, 0.05) !important;
+}
+
+html:not(.dark) .bg-slate-950 {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #e2e8f0 !important;
+}
+
+html:not(.dark) .bg-slate-900 {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+  border-color: #e2e8f0 !important;
+}
+
+html:not(.dark) .bg-slate-900\/90,
+html:not(.dark) .bg-slate-900\/95,
+html:not(.dark) .bg-slate-900\/80,
+html:not(.dark) .bg-slate-900\/60,
+html:not(.dark) .bg-slate-900\/40,
+html:not(.dark) .bg-slate-950\/95,
+html:not(.dark) .bg-slate-950\/90,
+html:not(.dark) .bg-slate-950\/80,
+html:not(.dark) .bg-slate-950\/70,
+html:not(.dark) .bg-slate-950\/60 {
+  background-color: rgba(255, 255, 255, 0.94) !important;
+  color: #0f172a !important;
+}
+
+html:not(.dark) .bg-slate-800 {
+  background-color: #f1f5f9 !important;
+  color: #1e293b !important;
+  border-color: #e2e8f0 !important;
+}
+
+html:not(.dark) .bg-slate-800\/80,
+html:not(.dark) .bg-slate-800\/60 {
+  background-color: #f1f5f9 !important;
+}
+
+html:not(.dark) .border-slate-800,
+html:not(.dark) .border-slate-700,
+html:not(.dark) .border-slate-700\/80,
+html:not(.dark) .border-slate-700\/70,
+html:not(.dark) .border-slate-800\/80,
+html:not(.dark) .border-slate-800\/60 {
+  border-color: #e2e8f0 !important;
+}
+
+html:not(.dark) .divide-slate-800\/60 > * + * {
+  border-color: #e2e8f0 !important;
+}
+
+html:not(.dark) .text-white,
+html:not(.dark) .text-slate-100,
+html:not(.dark) .text-slate-200 {
+  color: #0f172a !important;
+}
+
+html:not(.dark) .text-slate-300,
+html:not(.dark) .text-slate-400 {
+  color: #475569 !important;
+}
+
+html:not(.dark) .text-slate-500 {
+  color: #64748b !important;
+}
+
+html:not(.dark) .hover\:bg-slate-800:hover,
+html:not(.dark) .hover\:bg-slate-700:hover,
+html:not(.dark) .hover\:bg-slate-800\/60:hover {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+html:not(.dark) .hover\:bg-slate-900\/80:hover {
+  background-color: #f1f5f9 !important;
+}
+
+html:not(.dark) input,
+html:not(.dark) select,
+html:not(.dark) textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+html:not(.dark) input::placeholder,
+html:not(.dark) textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+html:not(.dark) thead.bg-slate-900 {
+  background-color: #f1f5f9 !important;
+  color: #334155 !important;
+  border-color: #cbd5e1 !important;
+}
+
+html:not(.dark) .row-drafted {
+  opacity: 0.55;
+  background-color: #f8fafc !important;
+}
+
+html:not(.dark) .row-my-team {
+  background-color: rgba(16, 185, 129, 0.08) !important;
+  border-left: 3px solid #059669;
+}
+
+/* Light mode modal backdrop */
+html:not(.dark) .modal-backdrop {
+  background: rgba(15, 23, 42, 0.45);
+}
+
+/* --- Theme Toggle Switch Button --- */
+.theme-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.theme-toggle-btn:hover {
+  color: var(--accent-blue);
+  border-color: var(--accent-blue);
+  transform: translateY(-1px);
+}
+
+.theme-toggle-btn:active {
+  transform: scale(0.92);
+}
+
+html.dark .theme-toggle-btn .lucide-sun,
+html.dark .theme-toggle-btn #theme-toggle-sun {
+  display: block !important;
+}
+html.dark .theme-toggle-btn .lucide-moon,
+html.dark .theme-toggle-btn #theme-toggle-moon {
+  display: none !important;
+}
+html:not(.dark) .theme-toggle-btn .lucide-sun,
+html:not(.dark) .theme-toggle-btn #theme-toggle-sun {
+  display: none !important;
+}
+html:not(.dark) .theme-toggle-btn .lucide-moon,
+html:not(.dark) .theme-toggle-btn #theme-toggle-moon {
+  display: block !important;
+}
+
+/* High-visibility prominent theme toggle buttons */
+.app-theme-toggle-btn {
+  touch-action: manipulation;
+  user-select: none;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.app-theme-toggle-btn:hover {
+  transform: translateY(-1px);
+}
+.app-theme-toggle-btn:active {
+  transform: scale(0.94);
+}
+html.dark .app-theme-toggle-btn {
+  background: rgba(30, 41, 59, 0.85);
+  border-color: rgba(71, 85, 105, 0.7);
+  color: #f1f5f9;
+}
+html.dark .app-theme-toggle-btn:hover {
+  background: rgba(51, 65, 85, 0.95);
+  border-color: rgba(245, 158, 11, 0.6);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.25);
+}
+html:not(.dark) .app-theme-toggle-btn {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08) !important;
+}
+html:not(.dark) .app-theme-toggle-btn:hover {
+  background: #f8fafc !important;
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.25) !important;
+}
+
+/* --- Custom Scrollbars --- */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
+
 ::-webkit-scrollbar-track {
-  background: #0f172a;
+  background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
-  background: #334155;
-  border-radius: 4px;
+  background: var(--border-subtle);
+  border-radius: 9999px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: var(--border-strong);
 }
 
-/* Glassmorphic cards */
-.glass-panel {
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(51, 65, 85, 0.5);
+/* Hide scrollbar utility */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
-.glass-panel-glow {
-  background: rgba(15, 23, 42, 0.9);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(59, 130, 246, 0.3);
-  box-shadow: 0 0 25px -5px rgba(59, 130, 246, 0.15);
-}
-
-/* Positional Badges */
-.badge-rb {
-  background-color: rgba(16, 185, 129, 0.2);
-  color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.4);
-}
-.badge-wr {
-  background-color: rgba(59, 130, 246, 0.2);
-  color: #60a5fa;
-  border: 1px solid rgba(59, 130, 246, 0.4);
-}
-.badge-qb {
-  background-color: rgba(239, 68, 68, 0.2);
-  color: #f87171;
-  border: 1px solid rgba(239, 68, 68, 0.4);
-}
-.badge-te {
-  background-color: rgba(168, 85, 247, 0.2);
-  color: #c084fc;
-  border: 1px solid rgba(168, 85, 247, 0.4);
-}
-.badge-k {
-  background-color: rgba(245, 158, 11, 0.2);
-  color: #fbbf24;
-  border: 1px solid rgba(245, 158, 11, 0.4);
-}
-.badge-dst {
-  background-color: rgba(148, 163, 184, 0.2);
-  color: #cbd5e1;
-  border: 1px solid rgba(148, 163, 184, 0.4);
-}
-.badge-flex {
-  background-color: rgba(236, 72, 153, 0.2);
-  color: #f472b6;
-  border: 1px solid rgba(236, 72, 153, 0.4);
-}
-
-/* Tier badges */
-.tier-1 {
-  background: linear-gradient(135deg, rgba(234, 179, 8, 0.2), rgba(249, 115, 22, 0.2));
-  color: #facc15;
-  border: 1px solid rgba(234, 179, 8, 0.5);
-}
-.tier-2 {
-  background: rgba(59, 130, 246, 0.2);
-  color: #93c5fd;
-  border: 1px solid rgba(59, 130, 246, 0.4);
-}
-.tier-3 {
-  background: rgba(16, 185, 129, 0.2);
-  color: #6ee7b7;
-  border: 1px solid rgba(16, 185, 129, 0.4);
-}
-.tier-4 {
-  background: rgba(148, 163, 184, 0.2);
-  color: #94a3b8;
-  border: 1px solid rgba(148, 163, 184, 0.3);
-}
-
-/* Animated pulse */
+/* --- Micro-Animations & Glow Effects --- */
 @keyframes pulse-subtle {
   0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.85; transform: scale(1.02); }
+  50% { opacity: 0.9; transform: scale(1.015); }
 }
+
 .pulse-subtle {
   animation: pulse-subtle 3s infinite ease-in-out;
 }
 
-/* Active nomination ring */
 .nomination-active-ring {
-  box-shadow: 0 0 30px rgba(245, 158, 11, 0.25);
-  border: 1px solid rgba(245, 158, 11, 0.5);
+  box-shadow: 0 0 35px rgba(245, 158, 11, 0.3);
+  border: 1.5px solid rgba(245, 158, 11, 0.6);
 }
 
-/* Draft table highlight */
-.row-drafted {
-  opacity: 0.45;
-  background-color: rgba(15, 23, 42, 0.5);
-}
-.row-drafted:hover {
-  opacity: 0.85;
-}
-.row-my-team {
-  background-color: rgba(16, 185, 129, 0.1) !important;
-  border-left: 3px solid #10b981;
+/* Smooth modal entry */
+.modal-enter {
+  animation: modalPop 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Modal Transitions */
-.modal-backdrop {
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(4px);
+@keyframes modalPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.94) translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* --- Reactive Mobile Enhancements (Samsung S25 Ultra / ~412px Viewport) --- */
+@media (max-width: 640px) {
+  /* Generous touch targets */
+  button, select, input, .tab-btn {
+    min-height: 40px;
+  }
+
+  /* Compact header layout */
+  .mobile-header-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  /* Quick action buttons row */
+  .mobile-actions-scroller {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    overflow-x: auto;
+    width: 100%;
+    padding-bottom: 0.2rem;
+  }
+
+  /* Modal bottom sheet on mobile */
+  .modal-backdrop > div {
+    margin: auto 0.5rem 0.5rem 0.5rem;
+    max-height: 88vh;
+    border-radius: 1.25rem;
+  }
+
+  /* Compact table font and padding */
+  table td, table th {
+    padding: 0.5rem 0.4rem !important;
+  }
+}
+
+/* Floating table scroll indicator */
+.table-scroll-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-subtle);
+  padding: 0.35rem 0.75rem;
+  background: var(--bg-surface-elevated);
+  border-radius: 0.5rem;
+  width: fit-content;
+}
+
+/* Print Styles */
+@media print {
+  body {
+    background: #ffffff;
+    color: #000000;
+  }
+  header, nav, #partner-chat-container, .theme-toggle-btn {
+    display: none !important;
+  }
 }

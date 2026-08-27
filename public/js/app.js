@@ -30,6 +30,7 @@ export class AuctionDraftApp {
     this.chatMessages = [];
     this.isChatMinimized = false;
     this.unreadChatCount = 0;
+    this.theme = 'dark';
 
     this.init();
   }
@@ -37,6 +38,9 @@ export class AuctionDraftApp {
   init() {
     // Expose app instance globally for inline onclick handlers
     window.app = this;
+
+    // Initialize Theme (Dark or Light)
+    this.initTheme();
 
     // Subscribe to state changes
     this.store.subscribe(() => {
@@ -209,6 +213,16 @@ export class AuctionDraftApp {
       });
     }
 
+    // Global Theme Toggle Listener (supports all toggle buttons across desktop & mobile)
+    document.addEventListener('click', (e) => {
+      const toggleBtn = e.target.closest('.app-theme-toggle-btn, #btn-toggle-theme, #btn-toggle-theme-desktop');
+      if (toggleBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.toggleTheme();
+      }
+    });
+
     // Quick Positional Filters in Draft Room
     document.querySelectorAll('.quick-filter-pos').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -265,6 +279,10 @@ export class AuctionDraftApp {
     }
 
     // Top action buttons
+    document.getElementById('btn-toggle-theme')?.addEventListener('click', () => this.toggleTheme());
+    document.getElementById('btn-toggle-theme-desktop')?.addEventListener('click', () => this.toggleTheme());
+    this.setupMobileSearch();
+
     document.getElementById('btn-open-gemini-modal')?.addEventListener('click', () => this.openGeminiModal());
     document.getElementById('btn-quick-nominate')?.addEventListener('click', () => this.openNominateModal());
     document.getElementById('btn-open-draft-order')?.addEventListener('click', () => this.openDraftOrderModal());
@@ -636,32 +654,32 @@ export class AuctionDraftApp {
       <div class="space-y-4">
         
         <!-- Header: Pos Badge, Name, Team, Bye, Health -->
-        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
-          <div class="flex items-center gap-3">
-            <span class="px-3 py-1 rounded-xl text-xs font-extrabold uppercase ${posClass}">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+          <div class="flex items-start sm:items-center gap-2.5 sm:gap-3">
+            <span class="px-2.5 py-1 rounded-xl text-xs font-extrabold uppercase shrink-0 ${posClass}">
               ${player.pos}
             </span>
             <div>
-              <div class="flex items-center gap-2 flex-wrap">
-                <h2 class="text-2xl font-black text-white tracking-tight">${player.name}</h2>
+              <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                <h2 class="text-xl sm:text-2xl font-black text-white tracking-tight leading-tight">${player.name}</h2>
                 ${player.isRookie ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">ROOKIE</span>' : ''}
                 ${healthBadge}
               </div>
-              <div class="text-xs text-slate-400 flex items-center gap-2 mt-0.5">
+              <div class="text-xs text-slate-400 flex items-center gap-1.5 sm:gap-2 mt-0.5 flex-wrap">
                 <span class="font-bold text-slate-300">${player.team}</span>
                 <span>•</span>
-                <span>Bye Week ${player.bye || 'None'}</span>
+                <span>Bye ${player.bye || 'None'}</span>
                 <span>•</span>
                 <span class="text-amber-400 font-semibold">${player.tier}</span>
                 <span>•</span>
-                <span>Nominated by <b class="text-slate-200">${nom.nominatingTeamName}</b></span>
+                <span class="truncate max-w-[200px]">Nom: <b class="text-slate-200">${nom.nominatingTeamName}</b></span>
               </div>
             </div>
           </div>
 
-          <div class="text-right">
-            <div class="text-[10px] text-slate-400 uppercase font-semibold">Projected 2026 Points</div>
-            <div class="text-2xl font-black font-mono text-blue-400">${player.projPts.toFixed(1)} <span class="text-xs text-slate-400">pts</span></div>
+          <div class="text-left sm:text-right bg-slate-950/60 sm:bg-transparent p-2 sm:p-0 rounded-xl sm:rounded-none border sm:border-0 border-slate-800/80 flex sm:block items-center justify-between">
+            <div class="text-[10px] text-slate-400 uppercase font-semibold">2026 Projected</div>
+            <div class="text-xl sm:text-2xl font-black font-mono text-blue-400">${player.projPts.toFixed(1)} <span class="text-xs text-slate-400 font-normal">pts</span></div>
           </div>
         </div>
 
@@ -681,42 +699,42 @@ export class AuctionDraftApp {
           </div>
         ` : ''}
 
-        <!-- Valuation Grid -->
-        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
-          <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-center">
+        <!-- Valuation Grid (Responsive 2-col to 5-col) -->
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-2.5">
+          <div class="bg-slate-950 p-2.5 sm:p-3 rounded-xl border border-slate-800 text-center">
             <div class="text-[10px] text-slate-400 uppercase font-medium">Baseline $</div>
-            <div class="text-lg font-black font-mono text-slate-200 mt-0.5">$${player.baselineVal}</div>
+            <div class="text-base sm:text-lg font-black font-mono text-slate-200 mt-0.5">$${player.baselineVal}</div>
           </div>
-          <div class="bg-slate-950 p-3 rounded-xl border border-indigo-500/40 text-center bg-indigo-950/20 shadow-inner">
-            <div class="text-[10px] text-indigo-300 uppercase font-bold flex items-center justify-center gap-1"><i data-lucide="sparkles" class="w-3 h-3 text-indigo-400"></i> AI Predictive $</div>
-            <div class="text-lg font-black font-mono text-emerald-300 mt-0.5">$${(news && news.predictiveValue) ? news.predictiveValue : player.baselineVal}</div>
+          <div class="bg-slate-950 p-2.5 sm:p-3 rounded-xl border border-indigo-500/40 text-center bg-indigo-950/20 shadow-inner">
+            <div class="text-[10px] text-indigo-300 uppercase font-bold flex items-center justify-center gap-1"><i data-lucide="sparkles" class="w-3 h-3 text-indigo-400"></i> AI Predict $</div>
+            <div class="text-base sm:text-lg font-black font-mono text-emerald-300 mt-0.5">$${(news && news.predictiveValue) ? news.predictiveValue : player.baselineVal}</div>
           </div>
-          <div class="bg-slate-950 p-3 rounded-xl border border-blue-900/40 text-center">
-            <div class="text-[10px] text-blue-400 uppercase font-medium">Dynamic Inflated $</div>
-            <div class="text-lg font-black font-mono text-blue-400 mt-0.5">$${dynamicVal}</div>
+          <div class="bg-slate-950 p-2.5 sm:p-3 rounded-xl border border-blue-900/40 text-center">
+            <div class="text-[10px] text-blue-400 uppercase font-medium">Dynamic Infl $</div>
+            <div class="text-base sm:text-lg font-black font-mono text-blue-400 mt-0.5">$${dynamicVal}</div>
           </div>
-          <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-center">
-            <div class="text-[10px] text-slate-400 uppercase font-medium">Target Bid Range</div>
-            <div class="text-sm font-bold font-mono text-emerald-400 mt-1">${(news && news.targetBidRange) ? news.targetBidRange : (player.targetRange || `$${player.baselineVal}`)}</div>
+          <div class="bg-slate-950 p-2.5 sm:p-3 rounded-xl border border-slate-800 text-center">
+            <div class="text-[10px] text-slate-400 uppercase font-medium">Target Range</div>
+            <div class="text-xs sm:text-sm font-bold font-mono text-emerald-400 mt-1">${(news && news.targetBidRange) ? news.targetBidRange : (player.targetRange || `$${player.baselineVal}`)}</div>
           </div>
-          <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-center">
+          <div class="bg-slate-950 p-2.5 sm:p-3 rounded-xl border border-slate-800 text-center col-span-2 sm:col-span-1">
             <div class="text-[10px] text-slate-400 uppercase font-medium">Hard Max Ceiling</div>
-            <div class="text-lg font-black font-mono text-amber-400 mt-0.5">$${(news && news.maxBidCeiling) ? news.maxBidCeiling : player.hardMax}</div>
+            <div class="text-base sm:text-lg font-black font-mono text-amber-400 mt-0.5">$${(news && news.maxBidCeiling) ? news.maxBidCeiling : player.hardMax}</div>
           </div>
         </div>
 
         <!-- ⚡ GEMINI LIVE BREAKING NEWS & SCOUTING INTEL -->
-        <div id="nomination-gemini-news-container" class="rounded-xl border border-indigo-500/30 bg-gradient-to-r from-indigo-950/40 to-purple-950/20 p-4 space-y-2 shadow-inner">
+        <div id="nomination-gemini-news-container" class="rounded-xl border border-indigo-500/30 bg-gradient-to-r from-indigo-950/40 to-purple-950/20 p-3 sm:p-4 space-y-2 shadow-inner">
           ${this.renderGeminiNewsCard(player)}
         </div>
 
         <!-- Opponent Bidding Threat Radar -->
-        <div class="bg-slate-950/90 p-3.5 rounded-xl border border-slate-800/80 text-xs space-y-2">
+        <div class="bg-slate-950/90 p-3 sm:p-3.5 rounded-xl border border-slate-800/80 text-xs space-y-2">
           <div class="flex items-center justify-between text-slate-400">
             <span class="font-bold flex items-center gap-1.5 text-slate-200">
-              <i data-lucide="crosshair" class="w-3.5 h-3.5 text-rose-400"></i> Opponent Bidding Threat Radar
+              <i data-lucide="crosshair" class="w-3.5 h-3.5 text-rose-400"></i> Opponent Threat Radar
             </span>
-            <span class="text-[11px] text-slate-500">${opponentThreats.length} rival${opponentThreats.length === 1 ? '' : 's'} with position need</span>
+            <span class="text-[11px] text-slate-500">${opponentThreats.length} rival${opponentThreats.length === 1 ? '' : 's'}</span>
           </div>
           ${opponentThreats.length === 0 ? `
             <div class="text-[11px] text-slate-500 italic py-0.5">No rival teams currently have critical starting needs for this slot. Clear bidding runway!</div>
@@ -739,38 +757,38 @@ export class AuctionDraftApp {
         </div>
 
         <!-- Scouting & Tactical Notes from Sheet -->
-        <div class="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 text-xs text-slate-300 space-y-1.5">
-          <div class="flex items-center justify-between font-semibold text-slate-400">
+        <div class="bg-slate-950/80 p-3 sm:p-3.5 rounded-xl border border-slate-800 text-xs text-slate-300 space-y-1.5">
+          <div class="flex items-center justify-between font-semibold text-slate-400 flex-wrap gap-2">
             <span>Role: <b class="text-slate-200">${player.role || 'Primary contributor'}</b></span>
             <span>Offense: <b class="text-slate-200">${player.offense || 'Standard'}</b></span>
           </div>
-          <p class="text-slate-300 leading-relaxed italic">"${player.notes || 'High-value draft target.'}"</p>
+          <p class="text-slate-300 leading-relaxed italic text-xs">"${player.notes || 'High-value draft target.'}"</p>
         </div>
 
         <!-- Bidding Recommendation Badge -->
-        <div class="p-3 rounded-xl border ${advice.badgeClass} flex items-center justify-between gap-3 text-xs">
+        <div class="p-3 rounded-xl border ${advice.badgeClass} flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
           <div class="flex items-center gap-2">
             <i data-lucide="shield-alert" class="w-4 h-4 shrink-0"></i>
             <div>
               <span class="font-bold uppercase tracking-wider">${advice.status}:</span> ${advice.message}
             </div>
           </div>
-          <div class="text-right shrink-0">
+          <div class="text-left sm:text-right shrink-0">
             <span class="text-slate-400">Your Max Bid:</span> <b class="font-mono text-amber-400">$${advice.userMaxBid}</b>
           </div>
         </div>
 
-        <!-- BID LOGGING FORM -->
-        <div class="bg-gradient-to-r from-slate-950 to-blue-950/40 p-4 rounded-xl border border-blue-500/30 flex flex-wrap items-center justify-between gap-3">
-          <div class="flex flex-wrap items-center gap-3 flex-1">
-            <div>
+        <!-- BID LOGGING FORM (Reactive Touch Controls) -->
+        <div class="bg-gradient-to-r from-slate-950 to-blue-950/40 p-3 sm:p-4 rounded-xl border border-blue-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-3 flex-1">
+            <div class="w-full sm:w-auto">
               <label class="block text-[10px] text-slate-400 uppercase font-semibold mb-1">Winning Team</label>
-              <select id="active-winning-team-select" class="bg-slate-900 border border-slate-700 text-xs text-slate-100 rounded-xl px-3 py-2 font-semibold focus:outline-none focus:border-blue-500">
+              <select id="active-winning-team-select" class="w-full sm:w-auto bg-slate-900 border border-slate-700 text-xs text-slate-100 rounded-xl px-3 py-2 font-semibold focus:outline-none focus:border-blue-500 min-h-[42px]">
                 ${this.store.state.teams.map(t => `<option value="${t.id}" ${t.id === nom.nominatingTeamId ? 'selected' : ''}>${t.name} (Max: $${this.engine.calculateMaxBid(t)})</option>`).join('')}
               </select>
             </div>
 
-            <div>
+            <div class="w-full sm:w-auto">
               <label class="block text-[10px] text-slate-400 uppercase font-semibold mb-1">Winning Price ($)</label>
               <input 
                 type="number" 
@@ -778,17 +796,17 @@ export class AuctionDraftApp {
                 value="${nom.openingBid}" 
                 min="1" 
                 max="200" 
-                class="bg-slate-900 border border-slate-700 text-sm font-mono font-bold text-white rounded-xl px-3 py-2 w-24 focus:outline-none focus:border-blue-500" 
+                class="w-full sm:w-28 bg-slate-900 border border-slate-700 text-base font-mono font-bold text-white rounded-xl px-3 py-2 focus:outline-none focus:border-blue-500 min-h-[42px]" 
               />
             </div>
           </div>
 
-          <div class="flex items-center gap-2">
-            <button onclick="window.app.cancelNomination()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 text-xs font-semibold rounded-xl transition-all">
+          <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+            <button onclick="window.app.cancelNomination()" class="flex-1 sm:flex-none px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold rounded-xl transition-all min-h-[42px]">
               Cancel
             </button>
-            <button onclick="window.app.confirmActiveDraft()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-emerald-600/30 flex items-center gap-1.5 transition-all">
-              <i data-lucide="check" class="w-4 h-4"></i> Confirm Pick (Enter)
+            <button onclick="window.app.confirmActiveDraft()" class="flex-1 sm:flex-none px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-1.5 transition-all min-h-[42px] active:scale-95">
+              <i data-lucide="check" class="w-4 h-4"></i> Confirm Pick
             </button>
           </div>
         </div>
@@ -1168,19 +1186,19 @@ export class AuctionDraftApp {
       return `
         <tr class="${rowClass}">
           <!-- Star Target -->
-          <td class="p-3 text-center">
-            <button onclick="window.app.toggleStar('${p.id}')" class="${p.isStarred ? 'text-amber-400' : 'text-slate-600 hover:text-slate-400'}">
+          <td class="p-2.5 sm:p-3 text-center">
+            <button onclick="window.app.toggleStar('${p.id}')" class="p-1 rounded-lg ${p.isStarred ? 'text-amber-400' : 'text-slate-500 hover:text-slate-300'}" title="Star player">
               <i data-lucide="star" class="w-4 h-4 ${p.isStarred ? 'fill-current' : ''}"></i>
             </button>
           </td>
 
           <!-- Rank -->
-          <td class="p-3 font-mono text-slate-400">${p.rank}</td>
+          <td class="p-2.5 sm:p-3 font-mono text-slate-400 font-semibold">${p.rank}</td>
 
           <!-- Name & Team -->
-          <td class="p-3">
-            <div class="flex items-center gap-2 flex-wrap">
-              <span class="font-bold text-slate-100 hover:text-blue-400 cursor-pointer" onclick="window.app.openPlayerModal('${p.id}')">
+          <td class="p-2.5 sm:p-3">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="font-bold text-slate-100 hover:text-blue-400 cursor-pointer text-xs" onclick="window.app.openPlayerModal('${p.id}')">
                 ${p.name}
               </span>
               ${valCatBadge}
@@ -1188,54 +1206,54 @@ export class AuctionDraftApp {
               ${tierScarcity ? `<span class="px-1.5 py-0.2 rounded text-[9px] font-black ${tierScarcity.isCliff ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50 animate-pulse' : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'}" title="${tierScarcity.alertMessage}">${tierScarcity.isCliff ? '🔥 1 LEFT' : '⚠️ 2 LEFT'}</span>` : ''}
               ${isInjured ? `<span class="px-1.5 py-0.2 rounded text-[9px] font-black bg-rose-500/20 text-rose-300 border border-rose-500/40 animate-pulse" title="Injury Status: ${injuryStr}">⚠️ ${injuryStr}</span>` : ''}
             </div>
-            <div class="text-[10px] text-slate-500">${p.team} • ${p.posRank}</div>
+            <div class="text-[10px] text-slate-400">${p.team} • ${p.posRank}</div>
           </td>
 
           <!-- Pos -->
-          <td class="p-3 text-center">
+          <td class="p-2.5 sm:p-3 text-center">
             <span class="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase badge-${p.pos.toLowerCase()}">
               ${p.pos}
             </span>
           </td>
 
           <!-- Bye -->
-          <td class="p-3 text-center font-mono text-slate-400">${p.bye || '-'}</td>
+          <td class="p-2.5 sm:p-3 text-center font-mono text-slate-400 hidden sm:table-cell">${p.bye || '-'}</td>
 
           <!-- Tier -->
-          <td class="p-3">
+          <td class="p-2.5 sm:p-3">
             <span class="px-2 py-0.5 rounded text-[10px] font-semibold ${p.tier && p.tier.includes('Tier 1') ? 'tier-1' : p.tier && p.tier.includes('Tier 2') ? 'tier-2' : p.tier && p.tier.includes('Tier 3') ? 'tier-3' : 'tier-4'}">
               ${p.tier || 'Tier 5'}
             </span>
           </td>
 
           <!-- Proj Pts -->
-          <td class="p-3 text-right font-mono font-bold text-blue-400">${p.projPts.toFixed(1)}</td>
+          <td class="p-2.5 sm:p-3 text-right font-mono font-bold text-blue-400">${p.projPts.toFixed(1)}</td>
 
           <!-- Baseline $ -->
-          <td class="p-3 text-right font-mono font-bold text-slate-300">$${p.baselineVal}</td>
+          <td class="p-2.5 sm:p-3 text-right font-mono font-bold text-slate-300 hidden md:table-cell">$${p.baselineVal}</td>
 
           <!-- Dynamic $ -->
-          <td class="p-3 text-right font-mono font-black text-emerald-400">$${dynVal}</td>
+          <td class="p-2.5 sm:p-3 text-right font-mono font-black text-emerald-400">$${dynVal}</td>
 
           <!-- Target Range -->
-          <td class="p-3 text-center font-mono text-slate-400">${p.targetRange || `$${p.baselineVal}`}</td>
+          <td class="p-2.5 sm:p-3 text-center font-mono text-slate-400 hidden lg:table-cell">${p.targetRange || `$${p.baselineVal}`}</td>
 
           <!-- Hard Max -->
-          <td class="p-3 text-right font-mono text-amber-400 font-bold">$${p.hardMax}</td>
+          <td class="p-2.5 sm:p-3 text-right font-mono text-amber-400 font-bold hidden sm:table-cell">$${p.hardMax}</td>
 
           <!-- AAV -->
-          <td class="p-3 text-right font-mono text-slate-400">$${p.aav}</td>
+          <td class="p-2.5 sm:p-3 text-right font-mono text-slate-400 hidden xl:table-cell">$${p.aav}</td>
 
           <!-- Notes -->
-          <td class="p-3 text-slate-400 max-w-xs truncate" title="${p.notes || ''}">
+          <td class="p-2.5 sm:p-3 text-slate-400 max-w-xs truncate hidden lg:table-cell" title="${p.notes || ''}">
             <span class="text-slate-300 font-medium">${p.role || ''}</span> ${p.notes ? `— ${p.notes}` : ''}
           </td>
 
           <!-- Action -->
-          <td class="p-3 text-center">
+          <td class="p-2.5 sm:p-3 text-center">
             ${isDrafted 
-              ? `<span class="text-[10px] font-bold text-slate-400 bg-slate-800 px-2 py-1 rounded">Drafted ($${p.draftedPrice || p.price || 1} by ${winningTeam ? winningTeam.name : 'Team'})</span>`
-              : `<button onclick="window.app.quickNominatePlayer('${p.id}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-[11px] shadow-sm">Nominate</button>`
+              ? `<span class="text-[10px] font-bold text-slate-400 bg-slate-800 px-2 py-1 rounded-lg">Drafted ($${p.draftedPrice || p.price || 1})</span>`
+              : `<button onclick="window.app.quickNominatePlayer('${p.id}')" class="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-xs shadow-sm transition-all active:scale-95">Nominate</button>`
             }
           </td>
         </tr>
@@ -1694,9 +1712,111 @@ export class AuctionDraftApp {
     if (window.lucide) window.lucide.createIcons();
   }
 
+  // --- THEME MANAGEMENT (LIGHT / DARK) ---
+  initTheme() {
+    const saved = localStorage.getItem('fantasy_draft_theme');
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const theme = saved || (prefersDark ? 'dark' : 'dark');
+    this.setTheme(theme, false);
+  }
+
+  setTheme(theme, showToast = true) {
+    this.theme = theme;
+    localStorage.setItem('fantasy_draft_theme', theme);
+
+    const metaTheme = document.getElementById('meta-theme-color');
+    if (theme === 'light') {
+      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.add('light');
+      if (metaTheme) metaTheme.setAttribute('content', '#f8fafc');
+    } else {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
+      if (metaTheme) metaTheme.setAttribute('content', '#070b14');
+    }
+
+    this.updateThemeIcons();
+    if (showToast) {
+      this.showToast(`Switched to ${theme === 'dark' ? '🌙 Dark' : '☀️ Light'} Mode`, 'info');
+    }
+  }
+
+  toggleTheme() {
+    const nextTheme = this.theme === 'dark' ? 'light' : 'dark';
+    this.setTheme(nextTheme, true);
+  }
+
+  updateThemeIcons() {
+    const isDark = document.documentElement.classList.contains('dark');
+    const label = isDark ? 'Light Mode' : 'Dark Mode';
+    const shortLabel = isDark ? 'Light' : 'Dark';
+    const title = `Switch to ${label}`;
+
+    // Reliable embedded SVGs ensuring icons render under all browser environments
+    const sunSvg = `<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-amber-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>`;
+    const moonSvg = `<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-indigo-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`;
+
+    document.querySelectorAll('.app-theme-toggle-btn, #btn-toggle-theme, #btn-toggle-theme-desktop').forEach(btn => {
+      btn.title = title;
+      btn.setAttribute('aria-label', title);
+      const isIconOnly = btn.dataset.iconOnly === 'true' || btn.classList.contains('theme-toggle-btn');
+      if (isIconOnly) {
+        btn.innerHTML = isDark ? sunSvg : moonSvg;
+      } else {
+        btn.innerHTML = isDark 
+          ? `${sunSvg}<span class="text-xs font-bold text-amber-300 ml-1.5">${shortLabel}</span>`
+          : `${moonSvg}<span class="text-xs font-bold text-slate-700 ml-1.5">${shortLabel}</span>`;
+      }
+    });
+
+    if (window.lucide) {
+      try { window.lucide.createIcons(); } catch (e) {}
+    }
+  }
+
+  // --- MOBILE SEARCH HANDLER ---
+  setupMobileSearch() {
+    const toggleBtn = document.getElementById('btn-mobile-search-toggle');
+    const container = document.getElementById('mobile-search-container');
+    const closeBtn = document.getElementById('btn-close-mobile-search');
+    const mobileInput = document.getElementById('mobile-search-input');
+
+    if (!toggleBtn || !container) return;
+
+    toggleBtn.addEventListener('click', () => {
+      const isHidden = container.classList.contains('hidden');
+      if (isHidden) {
+        container.classList.remove('hidden');
+        mobileInput?.focus();
+        const q = (mobileInput?.value || '').trim().toLowerCase();
+        if (q.length > 0) this.renderSearchDropdown(q, true);
+      } else {
+        container.classList.add('hidden');
+      }
+    });
+
+    closeBtn?.addEventListener('click', () => {
+      container.classList.add('hidden');
+    });
+
+    if (mobileInput) {
+      mobileInput.addEventListener('input', (e) => {
+        const q = e.target.value.trim().toLowerCase();
+        this.renderSearchDropdown(q, true);
+      });
+    }
+
+    // Dismiss mobile dropdown if tapped outside
+    document.addEventListener('click', (e) => {
+      if (container && !container.contains(e.target) && !toggleBtn.contains(e.target)) {
+        container.classList.add('hidden');
+      }
+    });
+  }
+
   // --- SEARCH DROPDOWN ---
-  renderSearchDropdown(q) {
-    const dropdown = document.getElementById('search-dropdown');
+  renderSearchDropdown(q, isMobile = false) {
+    const dropdown = document.getElementById(isMobile ? 'mobile-search-dropdown' : 'search-dropdown');
     if (!dropdown) return;
 
     if (!q) {
@@ -1735,10 +1855,13 @@ export class AuctionDraftApp {
   }
 
   selectSearchPlayer(playerId) {
-    const dropdown = document.getElementById('search-dropdown');
+    document.getElementById('search-dropdown')?.classList.add('hidden');
+    document.getElementById('mobile-search-dropdown')?.classList.add('hidden');
+    document.getElementById('mobile-search-container')?.classList.add('hidden');
     const searchInput = document.getElementById('global-search-input');
-    dropdown?.classList.add('hidden');
+    const mobileInput = document.getElementById('mobile-search-input');
     if (searchInput) searchInput.value = '';
+    if (mobileInput) mobileInput.value = '';
     this.openPlayerModal(playerId);
   }
 
