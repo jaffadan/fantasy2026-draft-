@@ -2,7 +2,25 @@
 <html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#070b14" id="meta-theme-color" />
+  <!-- Immediate Theme Initialization (Prevents theme flashing) -->
+  <script>
+    (function() {
+      try {
+        const savedTheme = localStorage.getItem('fantasy_draft_theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const theme = savedTheme ? savedTheme : (prefersDark ? 'dark' : 'dark'); // Default to dark for premium draft experience
+        if (theme === 'light') {
+          document.documentElement.classList.remove('dark');
+          document.documentElement.classList.add('light');
+        } else {
+          document.documentElement.classList.add('dark');
+          document.documentElement.classList.remove('light');
+        }
+      } catch (e) {}
+    })();
+  </script>
   <!-- Favicon -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏈</text></svg>">
   
@@ -61,35 +79,48 @@
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-blue-600 selection:text-white">
 
   <!-- TOP APP HEADER / STATUS BAR -->
-  <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 shadow-xl px-4 py-2.5">
-    <div class="max-w-[1700px] mx-auto flex flex-wrap items-center justify-between gap-3">
+  <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 shadow-xl px-2.5 sm:px-4 py-2">
+    <div class="max-w-[1700px] mx-auto flex flex-col md:flex-row md:items-center justify-between gap-2.5">
       
-      <!-- Logo & League Info -->
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20 text-white font-black text-xl tracking-wider border border-blue-400/30">
-          ⚡
+      <!-- Top Bar: Logo, League Info & Mobile Controls -->
+      <div class="flex items-center justify-between w-full md:w-auto gap-2">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20 text-white font-black text-lg sm:text-xl tracking-wider border border-blue-400/30 shrink-0">
+            ⚡
+          </div>
+          <div>
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <h1 class="font-black text-sm sm:text-base tracking-tight text-white flex items-center gap-1.5">
+                <span>Auction Command Center</span>
+                <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 hidden xs:inline">2026 Scoring</span>
+              </h1>
+            </div>
+            <div class="flex items-center gap-1.5 text-[11px] text-slate-400 flex-wrap">
+              <span class="hidden sm:inline">12 Teams • $200 Cap</span>
+              <span class="hidden sm:inline text-slate-600">•</span>
+              <span id="header-nomination-turn" class="text-amber-400 font-semibold flex items-center gap-1">
+                <i data-lucide="user-check" class="w-3 h-3 inline"></i> <span class="hidden xs:inline">Clock:</span> <span id="nomination-team-name" class="font-bold truncate max-w-[110px]">My Team</span>
+              </span>
+              <button id="btn-open-draft-order" class="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 transition-all flex items-center gap-0.5 cursor-pointer" title="Edit Draft Nomination Order">
+                <i data-lucide="list-ordered" class="w-3 h-3"></i> Order
+              </button>
+            </div>
+          </div>
         </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <h1 class="font-extrabold text-base tracking-tight text-white flex items-center gap-2">
-              Auction Command Center
-              <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30">2026 Custom Scoring</span>
-            </h1>
-          </div>
-          <div class="flex items-center gap-2 text-xs text-slate-400">
-            <span>12 Teams • $200 Cap • 15 Roster</span>
-            <span class="text-slate-600">•</span>
-            <span id="header-nomination-turn" class="text-amber-400 font-semibold flex items-center gap-1">
-              <i data-lucide="user-check" class="w-3.5 h-3.5 inline"></i> On the Clock: <span id="nomination-team-name">My Team</span>
-            </span>
-            <button id="btn-open-draft-order" class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 transition-all flex items-center gap-1 cursor-pointer" title="Edit Draft Nomination Order">
-              <i data-lucide="list-ordered" class="w-3 h-3"></i> Order
-            </button>
-          </div>
+
+        <!-- Mobile Top Right: Search Toggle & Theme Toggle -->
+        <div class="flex items-center gap-1.5 md:hidden">
+          <button id="btn-mobile-search-toggle" class="p-2 rounded-xl bg-slate-800 text-slate-300 border border-slate-700 hover:text-white transition-all" title="Toggle Search">
+            <i data-lucide="search" class="w-4 h-4"></i>
+          </button>
+          <button id="btn-toggle-theme" class="theme-toggle-btn" title="Toggle Light / Dark Mode">
+            <i data-lucide="sun" class="w-4 h-4 hidden dark:block" id="theme-toggle-sun"></i>
+            <i data-lucide="moon" class="w-4 h-4 block dark:hidden" id="theme-toggle-moon"></i>
+          </button>
         </div>
       </div>
 
-      <!-- Quick Search Input -->
+      <!-- Quick Search Input (Desktop) -->
       <div class="relative flex-1 max-w-md hidden md:block">
         <div class="relative">
           <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
@@ -105,8 +136,25 @@
         <div id="search-dropdown" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl overflow-hidden z-50 max-h-80 overflow-y-auto"></div>
       </div>
 
-      <!-- User Team & League Health Widget -->
-      <div class="flex items-center gap-2 sm:gap-4">
+      <!-- Expandable Mobile Search Container -->
+      <div id="mobile-search-container" class="hidden md:hidden w-full pb-1">
+        <div class="relative">
+          <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+          <input 
+            type="text" 
+            id="mobile-search-input" 
+            placeholder="Search player, NFL team, or rookie..."
+            class="w-full bg-slate-950 border border-slate-700 rounded-xl pl-9 pr-8 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500"
+          />
+          <button id="btn-close-mobile-search" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-1">
+            <i data-lucide="x" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+        <div id="mobile-search-dropdown" class="hidden absolute left-2.5 right-2.5 mt-1.5 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl overflow-hidden z-50 max-h-72 overflow-y-auto"></div>
+      </div>
+
+      <!-- User Team & League Health Widget & Actions -->
+      <div class="flex items-center justify-between md:justify-end gap-2 sm:gap-3 flex-wrap">
         
         <!-- AI Intel Background Pre-warm Gauge -->
         <div id="header-ai-preload-container" class="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700 cursor-pointer hover:border-indigo-500/50 transition-all" onclick="window.app.togglePrefetchPause()" title="Background Intel Preloader: Pre-fetching all player intel from Rank 1 to end">
@@ -137,52 +185,58 @@
           </div>
         </div>
 
-        <!-- My Team Budget Quick Badge -->
-        <div class="flex items-center gap-3 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-blue-950/60 to-slate-900 border border-blue-500/30">
+        <!-- My Team Budget Quick Badge (Reactive & Compact) -->
+        <div class="flex items-center gap-2 sm:gap-3 px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-blue-950/60 to-slate-900 border border-blue-500/30 grow md:grow-0 justify-between">
           <div>
             <div class="text-[10px] text-blue-300 font-semibold uppercase flex items-center justify-between gap-2">
-              <span id="header-my-team-name" class="font-bold text-white truncate max-w-[120px]">DCFC</span>
+              <span id="header-my-team-name" class="font-bold text-white truncate max-w-[100px] sm:max-w-[120px]">DCFC</span>
               <span id="header-roster-count" class="text-[10px] text-slate-400">0/15</span>
             </div>
             <div class="flex items-baseline gap-1.5">
-              <span id="header-remaining-budget" class="text-lg font-black font-mono text-emerald-400">$200</span>
-              <span class="text-xs text-slate-400">left</span>
+              <span id="header-remaining-budget" class="text-base sm:text-lg font-black font-mono text-emerald-400">$200</span>
+              <span class="text-[11px] text-slate-400">left</span>
               <span class="text-slate-600 text-xs">•</span>
-              <span class="text-xs text-slate-400">Max Bid: <b id="header-max-bid" class="text-amber-400 font-mono font-bold">$192</b></span>
+              <span class="text-[11px] text-slate-400">Max: <b id="header-max-bid" class="text-amber-400 font-mono font-bold">$192</b></span>
             </div>
           </div>
         </div>
 
-        <!-- Quick Action Buttons -->
-        <div class="flex items-center gap-1.5">
-          <button id="btn-open-gemini-modal" class="px-2.5 py-1.5 bg-indigo-950/80 hover:bg-indigo-900/90 text-indigo-300 hover:text-white rounded-xl text-xs font-bold border border-indigo-500/40 flex items-center gap-1.5 transition-all shadow-sm" title="Configure Gemini AI Real-Time News">
+        <!-- Quick Action Buttons Scroller -->
+        <div class="flex items-center gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+          <!-- Desktop Theme Toggle -->
+          <button id="btn-toggle-theme-desktop" class="hidden md:inline-flex theme-toggle-btn" title="Toggle Light / Dark Mode">
+            <i data-lucide="sun" class="w-4 h-4 hidden dark:block"></i>
+            <i data-lucide="moon" class="w-4 h-4 block dark:hidden"></i>
+          </button>
+
+          <button id="btn-open-gemini-modal" class="px-2 sm:px-2.5 py-1.5 bg-indigo-950/80 hover:bg-indigo-900/90 text-indigo-300 hover:text-white rounded-xl text-xs font-bold border border-indigo-500/40 flex items-center gap-1.5 transition-all shadow-sm shrink-0" title="Configure Gemini AI Real-Time News">
             <span class="relative flex h-2 w-2">
               <span id="gemini-status-ping" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 hidden"></span>
               <span id="gemini-status-dot" class="relative inline-flex rounded-full h-2 w-2 bg-slate-500"></span>
             </span>
             <i data-lucide="bot" class="w-3.5 h-3.5"></i>
-            <span class="hidden sm:inline">Gemini AI</span>
+            <span class="hidden md:inline">Gemini AI</span>
           </button>
 
-          <button id="btn-quick-nominate" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-lg shadow-blue-600/20 flex items-center gap-1.5 transition-all">
+          <button id="btn-quick-nominate" class="px-2.5 sm:px-3 py-1.5 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-lg shadow-blue-600/20 flex items-center gap-1.5 transition-all shrink-0">
             <i data-lucide="plus-circle" class="w-4 h-4"></i>
             <span class="hidden sm:inline">Nominate</span>
           </button>
 
-          <button id="btn-undo-pick" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-amber-300 rounded-xl text-xs border border-slate-700 transition-all" title="Undo Last Draft Pick (Alt+U)">
+          <button id="btn-undo-pick" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-amber-300 rounded-xl text-xs border border-slate-700 transition-all shrink-0" title="Undo Last Draft Pick (Alt+U)">
             <i data-lucide="undo-2" class="w-4 h-4"></i>
           </button>
 
-          <button id="btn-redo-pick" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-blue-300 rounded-xl text-xs border border-slate-700 transition-all" title="Redo Last Draft Pick (Alt+R / Ctrl+Y)">
+          <button id="btn-redo-pick" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-blue-300 rounded-xl text-xs border border-slate-700 transition-all shrink-0" title="Redo Last Draft Pick (Alt+R / Ctrl+Y)">
             <i data-lucide="redo-2" class="w-4 h-4"></i>
           </button>
 
-          <button id="btn-open-sync-modal" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-blue-300 rounded-xl text-xs border border-slate-700 transition-all" title="Google Sheets & CSV Sync">
+          <button id="btn-open-sync-modal" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-blue-300 rounded-xl text-xs border border-slate-700 transition-all shrink-0" title="Google Sheets & CSV Sync">
             <i data-lucide="refresh-cw" class="w-4 h-4"></i>
           </button>
 
           <!-- Real-Time Cloud Sync Indicator -->
-          <div id="cloud-sync-status-badge" class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-800/80 border border-slate-700/60 text-[11px] font-mono shadow-sm" title="Google Firestore Real-Time 2-Laptop Sync">
+          <div id="cloud-sync-status-badge" class="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700/60 text-[11px] font-mono shadow-sm shrink-0" title="Google Firestore Real-Time 2-Laptop Sync">
             <span id="cloud-sync-pulse" class="relative flex h-2 w-2">
               <span id="cloud-sync-ping" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span id="cloud-sync-dot" class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -191,7 +245,7 @@
           </div>
 
           <!-- Authenticated User Profile & Logout -->
-          <div id="header-user-profile" class="hidden items-center gap-2 pl-2 border-l border-slate-800">
+          <div id="header-user-profile" class="hidden items-center gap-2 pl-2 border-l border-slate-800 shrink-0">
             <img id="header-user-avatar" src="" alt="" class="w-7 h-7 rounded-full border border-blue-400/50 shadow-sm object-cover bg-slate-800" />
             <div class="hidden lg:block text-left">
               <div id="header-user-name" class="text-xs font-bold text-slate-200 leading-tight max-w-[110px] truncate">Manager</div>
@@ -207,61 +261,64 @@
 
     </div>
 
-    <!-- NAVIGATION TABS -->
-    <nav class="max-w-[1700px] mx-auto mt-2 flex items-center justify-between border-t border-slate-800/80 pt-2">
-      <div class="flex items-center gap-1 sm:gap-2 overflow-x-auto no-scrollbar py-0.5">
-        <button data-tab="draft-room" class="tab-btn active-tab px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 bg-blue-600 text-white transition-all">
-          <i data-lucide="flame" class="w-3.5 h-3.5"></i>
-          <span>Live Draft Room</span>
-        </button>
-        <button data-tab="cheat-sheet" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 transition-all flex items-center gap-2">
-          <i data-lucide="table-2" class="w-3.5 h-3.5"></i>
-          <span>Player Board & Tiers</span>
-        </button>
-        <button data-tab="my-team" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 transition-all flex items-center gap-2">
-          <i data-lucide="shield" class="w-3.5 h-3.5"></i>
-          <span>My Roster & Strategy</span>
-        </button>
-        <button data-tab="all-teams" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 transition-all flex items-center gap-2">
-          <i data-lucide="users" class="w-3.5 h-3.5"></i>
-          <span>All 12 Teams Matrix</span>
-        </button>
-        <button data-tab="rookie-hub" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 transition-all flex items-center gap-2">
-          <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
-          <span>Rookie Hub (35)</span>
-        </button>
-        <button data-tab="rules-scoring" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition-all flex items-center gap-1.5">
-          <i data-lucide="book-open" class="w-3.5 h-3.5"></i> Rules
-        </button>
-        <button data-tab="in-season" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-semibold text-emerald-400 hover:text-emerald-200 transition-all flex items-center gap-1.5 border border-emerald-500/30 bg-emerald-950/30 shadow-sm">
-          <i data-lucide="target" class="w-3.5 h-3.5 text-emerald-400"></i>
-          <span>In-Season Hub</span>
-          <span class="px-1.5 py-0.2 rounded-full text-[9px] bg-emerald-500/20 text-emerald-300 font-bold">Wk 1</span>
-        </button>
-        <button data-tab="ai-admin" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-semibold text-indigo-400 hover:text-indigo-200 transition-all flex items-center gap-1.5 border border-indigo-500/30 bg-indigo-950/30">
-          <i data-lucide="cpu" class="w-3.5 h-3.5 text-indigo-400"></i> AI Admin
-        </button>
-      </div>
+    <!-- NAVIGATION TABS (Smooth Horizontal Touch Scrolling) -->
+    <nav class="max-w-[1700px] mx-auto mt-2 border-t border-slate-800/80 pt-1.5">
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar py-0.5 flex-1 scroll-smooth">
+          <button data-tab="draft-room" class="tab-btn active-tab px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 bg-blue-600 text-white transition-all shrink-0">
+            <i data-lucide="flame" class="w-3.5 h-3.5"></i>
+            <span>Draft<span class="hidden sm:inline"> Room</span></span>
+          </button>
+          <button data-tab="cheat-sheet" class="tab-btn px-3 py-1.5 rounded-xl text-xs font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 transition-all flex items-center gap-1.5 shrink-0">
+            <i data-lucide="table-2" class="w-3.5 h-3.5"></i>
+            <span>Board<span class="hidden sm:inline"> & Tiers</span></span>
+          </button>
+          <button data-tab="my-team" class="tab-btn px-3 py-1.5 rounded-xl text-xs font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 transition-all flex items-center gap-1.5 shrink-0">
+            <i data-lucide="shield" class="w-3.5 h-3.5"></i>
+            <span>My Roster<span class="hidden sm:inline"> & Strategy</span></span>
+          </button>
+          <button data-tab="all-teams" class="tab-btn px-3 py-1.5 rounded-xl text-xs font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 transition-all flex items-center gap-1.5 shrink-0">
+            <i data-lucide="users" class="w-3.5 h-3.5"></i>
+            <span>12 Teams<span class="hidden sm:inline"> Matrix</span></span>
+          </button>
+          <button data-tab="rookie-hub" class="tab-btn px-3 py-1.5 rounded-xl text-xs font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 transition-all flex items-center gap-1.5 shrink-0">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+            <span>Rookies<span class="hidden sm:inline"> (35)</span></span>
+          </button>
+          <button data-tab="rules-scoring" class="tab-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white transition-all flex items-center gap-1.5 shrink-0">
+            <i data-lucide="book-open" class="w-3.5 h-3.5"></i> <span>Rules</span>
+          </button>
+          <button data-tab="in-season" class="tab-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-emerald-400 hover:text-emerald-200 transition-all flex items-center gap-1.5 border border-emerald-500/30 bg-emerald-950/30 shadow-sm shrink-0">
+            <i data-lucide="target" class="w-3.5 h-3.5 text-emerald-400"></i>
+            <span>In-Season</span>
+            <span class="px-1.5 py-0.2 rounded-full text-[9px] bg-emerald-500/20 text-emerald-300 font-bold hidden sm:inline">Wk 1</span>
+          </button>
+          <button data-tab="ai-admin" class="tab-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-indigo-400 hover:text-indigo-200 transition-all flex items-center gap-1.5 border border-indigo-500/30 bg-indigo-950/30 shrink-0">
+            <i data-lucide="cpu" class="w-3.5 h-3.5 text-indigo-400"></i> <span>AI Admin</span>
+          </button>
+        </div>
 
-      <div class="hidden sm:flex items-center gap-2">
-        <button id="btn-export-csv" class="text-xs text-slate-400 hover:text-slate-200 hover:bg-slate-800 px-2 py-1 rounded flex items-center gap-1" title="Export Picks Log CSV">
-          <i data-lucide="download" class="w-3.5 h-3.5"></i> Picks Log
-        </button>
-        <button id="btn-export-rosters-csv" class="text-xs text-slate-400 hover:text-emerald-300 hover:bg-slate-800 px-2 py-1 rounded flex items-center gap-1 border border-slate-700/60" title="Export All 12 Team Rosters">
-          <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-emerald-400"></i> All Rosters CSV
-        </button>
-        <button id="btn-reset-draft" class="text-xs text-rose-400/80 hover:text-rose-300 hover:bg-rose-950/40 px-2 py-1 rounded flex items-center gap-1">
-          <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Reset
-        </button>
-        <button id="btn-shutdown-server" class="text-xs text-slate-500 hover:text-rose-400 hover:bg-rose-950/20 px-2 py-1 rounded flex items-center gap-1 border border-slate-800" title="Shutdown Local Server">
-          <i data-lucide="power" class="w-3.5 h-3.5"></i> Shutdown
-        </button>
+        <!-- Desktop Quick CSV & System Actions -->
+        <div class="hidden lg:flex items-center gap-1.5 shrink-0">
+          <button id="btn-export-csv" class="text-xs text-slate-400 hover:text-slate-200 hover:bg-slate-800 px-2 py-1 rounded-lg flex items-center gap-1" title="Export Picks Log CSV">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i> Picks Log
+          </button>
+          <button id="btn-export-rosters-csv" class="text-xs text-slate-400 hover:text-emerald-300 hover:bg-slate-800 px-2 py-1 rounded-lg flex items-center gap-1 border border-slate-700/60" title="Export All 12 Team Rosters">
+            <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-emerald-400"></i> All Rosters
+          </button>
+          <button id="btn-reset-draft" class="text-xs text-rose-400/80 hover:text-rose-300 hover:bg-rose-950/40 px-2 py-1 rounded-lg flex items-center gap-1">
+            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Reset
+          </button>
+          <button id="btn-shutdown-server" class="text-xs text-slate-500 hover:text-rose-400 hover:bg-rose-950/20 px-2 py-1 rounded-lg flex items-center gap-1 border border-slate-800" title="Shutdown Local Server">
+            <i data-lucide="power" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
       </div>
     </nav>
   </header>
 
-  <!-- MAIN APP CONTAINER -->
-  <main class="flex-1 max-w-[1700px] w-full mx-auto p-4 space-y-6">
+  <!-- MAIN APP CONTAINER (Reactive Padding for Mobile & Desktop) -->
+  <main class="flex-1 max-w-[1700px] w-full mx-auto p-2.5 sm:p-4 md:p-6 space-y-4 sm:space-y-6">
 
     <!-- ========================================== -->
     <!-- TAB 1: LIVE DRAFT ROOM (COMMAND CENTER) -->
@@ -404,24 +461,33 @@
 
       <!-- Master Player Table -->
       <div class="glass-panel rounded-2xl border border-slate-800 overflow-hidden shadow-2xl">
+        <div class="px-3 py-2 border-b border-slate-800 flex items-center justify-between gap-2 text-[11px] text-slate-400">
+          <div class="flex items-center gap-1.5 font-medium">
+            <i data-lucide="layers" class="w-3.5 h-3.5 text-blue-400"></i>
+            <span>344 Master Draft Targets</span>
+          </div>
+          <div class="flex items-center gap-1 text-[10px] text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded-lg border border-slate-700/60 sm:hidden">
+            <i data-lucide="arrow-left-right" class="w-3 h-3 text-blue-400"></i> Swipe table for more
+          </div>
+        </div>
         <div class="overflow-x-auto max-h-[720px] overflow-y-auto">
           <table class="w-full text-left text-xs border-collapse">
             <thead class="sticky top-0 bg-slate-900 border-b border-slate-700/80 text-slate-400 font-semibold z-10">
               <tr>
-                <th class="p-3 w-10 text-center">⭐</th>
-                <th class="p-3 w-14 cursor-pointer hover:text-white" onclick="window.app.setTableSort('rank')">Rank ↕</th>
-                <th class="p-3 cursor-pointer hover:text-white" onclick="window.app.setTableSort('name')">Player / NFL Team ↕</th>
-                <th class="p-3 w-16 text-center">Pos</th>
-                <th class="p-3 w-14 text-center">Bye</th>
-                <th class="p-3 w-20">Tier</th>
-                <th class="p-3 text-right cursor-pointer hover:text-white" onclick="window.app.setTableSort('projPts')">Proj Pts ↕</th>
-                <th class="p-3 text-right cursor-pointer hover:text-white" onclick="window.app.setTableSort('baselineVal')">Base $ ↕</th>
-                <th class="p-3 text-right cursor-pointer hover:text-white" onclick="window.app.setTableSort('dynVal')">Dyn $ ↕</th>
-                <th class="p-3 text-center">Target Range</th>
-                <th class="p-3 text-right">Hard Max</th>
-                <th class="p-3 text-right">AAV</th>
-                <th class="p-3">Role & Tactical Scouting Notes</th>
-                <th class="p-3 w-28 text-center">Action</th>
+                <th class="p-2.5 sm:p-3 w-8 sm:w-10 text-center">⭐</th>
+                <th class="p-2.5 sm:p-3 w-10 sm:w-14 cursor-pointer hover:text-white" onclick="window.app.setTableSort('rank')">Rank ↕</th>
+                <th class="p-2.5 sm:p-3 cursor-pointer hover:text-white" onclick="window.app.setTableSort('name')">Player / Team ↕</th>
+                <th class="p-2.5 sm:p-3 w-12 sm:w-16 text-center">Pos</th>
+                <th class="p-2.5 sm:p-3 w-12 sm:w-14 text-center hidden sm:table-cell">Bye</th>
+                <th class="p-2.5 sm:p-3 w-16 sm:w-20">Tier</th>
+                <th class="p-2.5 sm:p-3 text-right cursor-pointer hover:text-white" onclick="window.app.setTableSort('projPts')">Proj ↕</th>
+                <th class="p-2.5 sm:p-3 text-right cursor-pointer hover:text-white hidden md:table-cell" onclick="window.app.setTableSort('baselineVal')">Base $ ↕</th>
+                <th class="p-2.5 sm:p-3 text-right cursor-pointer hover:text-white font-bold text-emerald-400" onclick="window.app.setTableSort('dynVal')">Dyn $ ↕</th>
+                <th class="p-2.5 sm:p-3 text-center hidden lg:table-cell">Target</th>
+                <th class="p-2.5 sm:p-3 text-right hidden sm:table-cell">Max</th>
+                <th class="p-2.5 sm:p-3 text-right hidden xl:table-cell">AAV</th>
+                <th class="p-2.5 sm:p-3 hidden lg:table-cell">Role & Scouting</th>
+                <th class="p-2.5 sm:p-3 w-20 sm:w-28 text-center">Action</th>
               </tr>
             </thead>
             <tbody id="master-player-tbody" class="divide-y divide-slate-800/60 font-medium">
@@ -437,32 +503,32 @@
     <!-- ========================================== -->
     <!-- TAB 3: MY TEAM ROSTER & BUDGET STRATEGY -->
     <!-- ========================================== -->
-    <div id="view-my-team" class="tab-content hidden space-y-6">
+    <div id="view-my-team" class="tab-content hidden space-y-4 sm:space-y-6">
       
-      <!-- Top Metrics Banner -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div class="glass-panel rounded-2xl p-4 border border-slate-800">
-          <div class="text-xs text-slate-400 uppercase font-semibold">Remaining Budget</div>
-          <div id="myteam-budget-left" class="text-2xl font-black font-mono text-emerald-400 mt-1">$200</div>
-          <div class="text-[11px] text-slate-400 mt-0.5">Spent: <span id="myteam-budget-spent" class="font-mono text-slate-200">$0</span> of $200</div>
+      <!-- Top Metrics Banner (2x2 on mobile, 4-col on desktop) -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4">
+        <div class="glass-panel rounded-2xl p-3 sm:p-4 border border-slate-800">
+          <div class="text-[10px] sm:text-xs text-slate-400 uppercase font-semibold">Remaining Budget</div>
+          <div id="myteam-budget-left" class="text-xl sm:text-2xl font-black font-mono text-emerald-400 mt-0.5 sm:mt-1">$200</div>
+          <div class="text-[10px] sm:text-[11px] text-slate-400 mt-0.5">Spent: <span id="myteam-budget-spent" class="font-mono text-slate-200">$0</span></div>
         </div>
 
-        <div class="glass-panel rounded-2xl p-4 border border-slate-800">
-          <div class="text-xs text-slate-400 uppercase font-semibold">Legal Max Bid</div>
-          <div id="myteam-max-bid" class="text-2xl font-black font-mono text-amber-400 mt-1">$192</div>
-          <div class="text-[11px] text-slate-400 mt-0.5">Leaving $1 for <span id="myteam-open-starters">8</span> open starters</div>
+        <div class="glass-panel rounded-2xl p-3 sm:p-4 border border-slate-800">
+          <div class="text-[10px] sm:text-xs text-slate-400 uppercase font-semibold">Legal Max Bid</div>
+          <div id="myteam-max-bid" class="text-xl sm:text-2xl font-black font-mono text-amber-400 mt-0.5 sm:mt-1">$192</div>
+          <div class="text-[10px] sm:text-[11px] text-slate-400 mt-0.5"><span id="myteam-open-starters">8</span> open spots</div>
         </div>
 
-        <div class="glass-panel rounded-2xl p-4 border border-slate-800">
-          <div class="text-xs text-slate-400 uppercase font-semibold">Projected Starting Points</div>
-          <div id="myteam-proj-pts" class="text-2xl font-black font-mono text-blue-400 mt-1">0.0 pts</div>
-          <div class="text-[11px] text-slate-400 mt-0.5">Weekly Average: <span id="myteam-weekly-avg" class="font-mono text-slate-200">0.0</span> pts/wk</div>
+        <div class="glass-panel rounded-2xl p-3 sm:p-4 border border-slate-800">
+          <div class="text-[10px] sm:text-xs text-slate-400 uppercase font-semibold">Projected Points</div>
+          <div id="myteam-proj-pts" class="text-xl sm:text-2xl font-black font-mono text-blue-400 mt-0.5 sm:mt-1">0.0</div>
+          <div class="text-[10px] sm:text-[11px] text-slate-400 mt-0.5"><span id="myteam-weekly-avg" class="font-mono text-slate-200">0.0</span> pts/wk</div>
         </div>
 
-        <div class="glass-panel rounded-2xl p-4 border border-slate-800">
-          <div class="text-xs text-slate-400 uppercase font-semibold">Roster Fill Rate</div>
-          <div id="myteam-roster-fraction" class="text-2xl font-black font-mono text-indigo-400 mt-1">0 / 15</div>
-          <div class="text-[11px] text-slate-400 mt-0.5"><span id="myteam-starters-count">0/9</span> Starters • <span id="myteam-bench-count">0/6</span> Bench</div>
+        <div class="glass-panel rounded-2xl p-3 sm:p-4 border border-slate-800">
+          <div class="text-[10px] sm:text-xs text-slate-400 uppercase font-semibold">Roster Fill Rate</div>
+          <div id="myteam-roster-fraction" class="text-xl sm:text-2xl font-black font-mono text-indigo-400 mt-0.5 sm:mt-1">0 / 15</div>
+          <div class="text-[10px] sm:text-[11px] text-slate-400 mt-0.5"><span id="myteam-starters-count">0/9</span> St • <span id="myteam-bench-count">0/6</span> Bn</div>
         </div>
       </div>
 
@@ -556,7 +622,7 @@
       </div>
 
       <!-- 12 Team Cards Grid -->
-      <div id="all-teams-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div id="all-teams-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
         <!-- Rendered by JS -->
       </div>
 
@@ -594,7 +660,7 @@
       </div>
 
       <!-- Rookie Grid Cards -->
-      <div id="rookie-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div id="rookie-cards-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         <!-- Rendered by JS -->
       </div>
 
@@ -1100,9 +1166,9 @@
   <!-- ========================================== -->
 
   <!-- PLAYER DETAIL MODAL -->
-  <div id="player-modal" class="fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-4">
-    <div class="glass-panel-glow bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full p-6 space-y-5 shadow-2xl relative max-h-[90vh] overflow-y-auto">
-      <button onclick="window.app.closeModals()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg">
+  <div id="player-modal" class="fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-2.5 sm:p-4">
+    <div class="glass-panel-glow bg-slate-900 border border-slate-700 rounded-2xl sm:rounded-3xl max-w-2xl w-full p-4 sm:p-6 space-y-4 sm:space-y-5 shadow-2xl relative max-h-[92vh] overflow-y-auto">
+      <button onclick="window.app.closeModals()" class="absolute top-3.5 right-3.5 text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition-colors">
         <i data-lucide="x" class="w-5 h-5"></i>
       </button>
       <div id="player-modal-content">
@@ -1112,9 +1178,9 @@
   </div>
 
   <!-- QUICK NOMINATION MODAL -->
-  <div id="nominate-modal" class="fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-4">
-    <div class="glass-panel bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl relative">
-      <button onclick="window.app.closeModals()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg">
+  <div id="nominate-modal" class="fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-2.5 sm:p-4">
+    <div class="glass-panel bg-slate-900 border border-slate-700 rounded-2xl sm:rounded-3xl max-w-md w-full p-4 sm:p-6 space-y-4 shadow-2xl relative">
+      <button onclick="window.app.closeModals()" class="absolute top-3.5 right-3.5 text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition-colors">
         <i data-lucide="x" class="w-5 h-5"></i>
       </button>
       <h3 class="text-base font-bold text-white flex items-center gap-2">
@@ -1123,17 +1189,17 @@
       <div class="space-y-3 text-xs">
         <div>
           <label class="block text-slate-400 mb-1">Select Player to Nominate</label>
-          <select id="modal-nominate-player-select" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500"></select>
+          <select id="modal-nominate-player-select" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500 min-h-[42px]"></select>
         </div>
         <div>
           <label class="block text-slate-400 mb-1">Nominating Team</label>
-          <select id="modal-nominate-team-select" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500"></select>
+          <select id="modal-nominate-team-select" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500 min-h-[42px]"></select>
         </div>
         <div>
           <label class="block text-slate-400 mb-1">Opening Bid ($)</label>
-          <input type="number" id="modal-nominate-opening-bid" value="1" min="1" max="200" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 font-mono focus:outline-none focus:border-blue-500" />
+          <input type="number" id="modal-nominate-opening-bid" value="1" min="1" max="200" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 font-mono text-sm font-bold focus:outline-none focus:border-blue-500 min-h-[42px]" />
         </div>
-        <button id="modal-nominate-confirm-btn" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-lg shadow-blue-600/30 transition-all">
+        <button id="modal-nominate-confirm-btn" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-lg shadow-blue-600/30 transition-all text-xs active:scale-98">
           Put on Auction Block
         </button>
       </div>
@@ -1141,9 +1207,9 @@
   </div>
 
   <!-- TEAM ROSTER INSPECTOR MODAL -->
-  <div id="team-modal" class="fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-4">
-    <div class="glass-panel-glow bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full p-6 space-y-4 shadow-2xl relative max-h-[90vh] overflow-y-auto">
-      <button onclick="window.app.closeModals()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg">
+  <div id="team-modal" class="fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-2.5 sm:p-4">
+    <div class="glass-panel-glow bg-slate-900 border border-slate-700 rounded-2xl sm:rounded-3xl max-w-2xl w-full p-4 sm:p-6 space-y-4 shadow-2xl relative max-h-[92vh] overflow-y-auto">
+      <button onclick="window.app.closeModals()" class="absolute top-3.5 right-3.5 text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition-colors">
         <i data-lucide="x" class="w-5 h-5"></i>
       </button>
       <div id="team-modal-content">
@@ -1153,20 +1219,20 @@
   </div>
 
   <!-- DRAFT / NOMINATION ORDER MODAL -->
-  <div id="draft-order-modal" class="fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-4">
-    <div class="glass-panel-glow bg-slate-900 border border-amber-500/40 rounded-2xl max-w-xl w-full p-6 space-y-5 shadow-2xl relative max-h-[90vh] overflow-y-auto">
-      <button onclick="window.app.closeModals()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg">
+  <div id="draft-order-modal" class="fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-2.5 sm:p-4">
+    <div class="glass-panel-glow bg-slate-900 border border-amber-500/40 rounded-2xl sm:rounded-3xl max-w-xl w-full p-4 sm:p-6 space-y-4 sm:space-y-5 shadow-2xl relative max-h-[92vh] overflow-y-auto">
+      <button onclick="window.app.closeModals()" class="absolute top-3.5 right-3.5 text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition-colors">
         <i data-lucide="x" class="w-5 h-5"></i>
       </button>
       
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3 flex-wrap gap-2">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-600 to-orange-500 flex items-center justify-center text-white shadow-lg shadow-amber-500/20">
+          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-amber-600 to-orange-500 flex items-center justify-center text-white shadow-lg shadow-amber-500/20 shrink-0">
             <i data-lucide="list-ordered" class="w-5 h-5"></i>
           </div>
           <div>
             <h3 class="text-base font-bold text-white">Draft & Nomination Order</h3>
-            <p class="text-xs text-slate-400">Set on draft night. Teams with $0 cash or 15 players are automatically skipped.</p>
+            <p class="text-xs text-slate-400">Set order for draft night.</p>
           </div>
         </div>
 
@@ -1185,7 +1251,7 @@
       </div>
 
       <div class="pt-2 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
-        <span>Use Up/Down arrows to position teams according to draft draw.</span>
+        <span>Use Up/Down arrows to reorder.</span>
         <button onclick="window.app.closeModals()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-md transition-all">
           Done
         </button>
@@ -1194,9 +1260,9 @@
   </div>
 
   <!-- GOOGLE SHEETS & CSV SYNC MODAL -->
-  <div id="sync-modal" class="fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-4">
-    <div class="glass-panel-glow bg-slate-900 border border-slate-700 rounded-2xl max-w-xl w-full p-6 space-y-5 shadow-2xl relative max-h-[90vh] overflow-y-auto">
-      <button onclick="window.app.closeModals()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg">
+  <div id="sync-modal" class="fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-2.5 sm:p-4">
+    <div class="glass-panel-glow bg-slate-900 border border-slate-700 rounded-2xl sm:rounded-3xl max-w-xl w-full p-4 sm:p-6 space-y-4 sm:space-y-5 shadow-2xl relative max-h-[92vh] overflow-y-auto">
+      <button onclick="window.app.closeModals()" class="absolute top-3.5 right-3.5 text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition-colors">
         <i data-lucide="x" class="w-5 h-5"></i>
       </button>
       <h3 class="text-base font-bold text-white flex items-center gap-2">
@@ -1204,17 +1270,17 @@
       </h3>
       
       <!-- Direct Google Sheets Sync -->
-      <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
+      <div class="bg-slate-950 p-3.5 sm:p-4 rounded-xl border border-slate-800 space-y-3">
         <div class="text-xs font-semibold text-slate-200">Direct Google Sheet Fetch</div>
         <p class="text-[11px] text-slate-400">Syncs directly with your spreadsheet (GID 2026127503 and GID 1188258304).</p>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
           <input 
             type="text" 
             id="sync-sheet-id" 
             value="1FHfpcyKwtGxmAhxD_e0qSfdEPtteVP-Ahb8B56nzxVQ" 
-            class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs font-mono text-slate-200 focus:outline-none focus:border-blue-500"
+            class="w-full sm:flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono text-slate-200 focus:outline-none focus:border-blue-500"
           />
-          <button id="btn-run-sheet-sync" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1">
+          <button id="btn-run-sheet-sync" class="w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1">
             <i data-lucide="cloud-download" class="w-3.5 h-3.5"></i> Sync Now
           </button>
         </div>
@@ -1261,9 +1327,9 @@
   </div>
 
   <!-- GEMINI AI SETTINGS MODAL -->
-  <div id="gemini-modal" class="fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-4">
-    <div class="glass-panel-glow bg-slate-900 border border-indigo-500/50 rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl relative">
-      <button onclick="window.app.closeModals()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg">
+  <div id="gemini-modal" class="fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-2.5 sm:p-4">
+    <div class="glass-panel-glow bg-slate-900 border border-indigo-500/50 rounded-2xl sm:rounded-3xl max-w-lg w-full p-4 sm:p-6 space-y-4 sm:space-y-5 shadow-2xl relative max-h-[92vh] overflow-y-auto">
+      <button onclick="window.app.closeModals()" class="absolute top-3.5 right-3.5 text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition-colors">
         <i data-lucide="x" class="w-5 h-5"></i>
       </button>
       <div class="flex items-center gap-3">
@@ -1375,8 +1441,8 @@
   <!-- ========================================== -->
   <!-- FULLSCREEN GOOGLE OAUTH LOCK SCREEN -->
   <!-- ========================================== -->
-  <div id="auth-lock-overlay" class="fixed inset-0 z-[100] bg-slate-950/95 backdrop-blur-xl flex items-center justify-center p-4">
-    <div class="glass-panel-glow bg-slate-900/95 border border-blue-500/40 rounded-3xl max-w-md w-full p-8 space-y-6 shadow-2xl relative text-center">
+  <div id="auth-lock-overlay" class="fixed inset-0 z-[100] bg-slate-950/95 backdrop-blur-xl flex items-center justify-center p-3 sm:p-4">
+    <div class="glass-panel-glow bg-slate-900/95 border border-blue-500/40 rounded-3xl max-w-md w-full p-5 sm:p-8 space-y-4 sm:space-y-6 shadow-2xl relative text-center">
       
       <!-- App Badge & Header -->
       <div class="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shadow-xl shadow-blue-500/30 text-white text-3xl border border-blue-400/40">
@@ -1434,7 +1500,7 @@
           <input 
             type="text" 
             id="auth-client-id-input" 
-            value="816919087026-400mjujbr7cklrmbulggu1jhf0jf03o5.apps.googleusercontent.com"
+            value="816919087026-400mjujbr7cklrmbulggu1jhf0jf03o5.apps.googleusercontent.com" 
             placeholder="xxxx.apps.googleusercontent.com" 
             class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-200 font-mono focus:outline-none focus:border-blue-500 text-xs" 
           />
@@ -1450,7 +1516,7 @@
   <!-- ========================================== -->
   <!-- REAL-TIME PARTNER DRAFT CHAT TOAST WIDGET -->
   <!-- ========================================== -->
-  <div id="partner-chat-container" class="fixed bottom-4 left-4 z-40 flex flex-col items-start transition-all duration-300 max-w-sm w-[92vw] sm:w-84">
+  <div id="partner-chat-container" class="fixed bottom-3 sm:bottom-4 left-3 sm:left-4 z-40 flex flex-col items-start transition-all duration-300 max-w-sm w-[92vw] sm:w-84">
     
     <!-- Expanded Chat Card -->
     <div id="partner-chat-expanded" class="w-full bg-slate-900/95 backdrop-blur-xl border border-indigo-500/40 rounded-2xl shadow-2xl overflow-hidden flex flex-col transition-all duration-300">

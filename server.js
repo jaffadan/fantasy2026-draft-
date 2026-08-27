@@ -188,6 +188,26 @@ export default async function handler(req, res) {
     return;
   }
 
+  // 5. Localhost Dev Login (for local dev testing)
+  if (req.url.startsWith('/api/auth/dev-login') && process.env.VERCEL !== '1') {
+    const email = 'jaffadan@gmail.com';
+    const name = 'Dan Jaffa';
+    const picture = '';
+    const sessionPayload = {
+      email,
+      name,
+      picture,
+      exp: Date.now() + 30 * 24 * 60 * 60 * 1000
+    };
+    const sessionToken = createSessionToken(sessionPayload);
+    res.writeHead(302, {
+      'Set-Cookie': `auth_session=${sessionToken}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${30 * 24 * 60 * 60}`,
+      'Location': '/'
+    });
+    res.end();
+    return;
+  }
+
   // --- DRAFT DATA ENDPOINTS ---
 
   // Google Sheets Proxy endpoint
