@@ -213,6 +213,16 @@ export class AuctionDraftApp {
       });
     }
 
+    // Global Theme Toggle Listener (supports all toggle buttons across desktop & mobile)
+    document.addEventListener('click', (e) => {
+      const toggleBtn = e.target.closest('.app-theme-toggle-btn, #btn-toggle-theme, #btn-toggle-theme-desktop');
+      if (toggleBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.toggleTheme();
+      }
+    });
+
     // Quick Positional Filters in Draft Room
     document.querySelectorAll('.quick-filter-pos').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -1738,10 +1748,30 @@ export class AuctionDraftApp {
 
   updateThemeIcons() {
     const isDark = document.documentElement.classList.contains('dark');
-    document.querySelectorAll('#btn-toggle-theme, #btn-toggle-theme-desktop').forEach(btn => {
-      btn.title = `Switch to ${isDark ? 'Light' : 'Dark'} Mode`;
+    const label = isDark ? 'Light Mode' : 'Dark Mode';
+    const shortLabel = isDark ? 'Light' : 'Dark';
+    const title = `Switch to ${label}`;
+
+    // Reliable embedded SVGs ensuring icons render under all browser environments
+    const sunSvg = `<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-amber-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>`;
+    const moonSvg = `<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-indigo-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`;
+
+    document.querySelectorAll('.app-theme-toggle-btn, #btn-toggle-theme, #btn-toggle-theme-desktop').forEach(btn => {
+      btn.title = title;
+      btn.setAttribute('aria-label', title);
+      const isIconOnly = btn.dataset.iconOnly === 'true' || btn.classList.contains('theme-toggle-btn');
+      if (isIconOnly) {
+        btn.innerHTML = isDark ? sunSvg : moonSvg;
+      } else {
+        btn.innerHTML = isDark 
+          ? `${sunSvg}<span class="text-xs font-bold text-amber-300 ml-1.5">${shortLabel}</span>`
+          : `${moonSvg}<span class="text-xs font-bold text-slate-700 ml-1.5">${shortLabel}</span>`;
+      }
     });
-    if (window.lucide) window.lucide.createIcons();
+
+    if (window.lucide) {
+      try { window.lucide.createIcons(); } catch (e) {}
+    }
   }
 
   // --- MOBILE SEARCH HANDLER ---
