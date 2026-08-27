@@ -249,94 +249,365 @@ html.dark .tier-4 {
   color: #94a3b8;
 }
 
-/* --- Light Mode Specific Overrides for Tailwind Components --- */
+/* --- PREMIUM LIGHT MODE DESIGN SYSTEM --- */
 html:not(.dark) body {
-  background-color: #f8fafc;
+  background-color: #f1f5f9;
   color: #0f172a;
 }
 
+html:not(.dark) .glass-panel {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.05), 0 1px 2px -1px rgba(15, 23, 42, 0.03) !important;
+}
+
+html:not(.dark) .glass-panel-glow {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04) !important;
+}
+
+/* Header in Light Mode */
 html:not(.dark) header {
-  background: rgba(255, 255, 255, 0.94) !important;
-  border-color: #e2e8f0 !important;
-  box-shadow: 0 4px 15px -1px rgba(0, 0, 0, 0.05) !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04) !important;
 }
 
-html:not(.dark) .bg-slate-950 {
-  background-color: #ffffff !important;
-  color: #0f172a !important;
-  border-color: #e2e8f0 !important;
-}
-
-html:not(.dark) .bg-slate-900 {
-  background-color: #f8fafc !important;
-  color: #0f172a !important;
-  border-color: #e2e8f0 !important;
-}
-
-html:not(.dark) .bg-slate-900\/90,
-html:not(.dark) .bg-slate-900\/95,
-html:not(.dark) .bg-slate-900\/80,
-html:not(.dark) .bg-slate-900\/60,
-html:not(.dark) .bg-slate-900\/40,
-html:not(.dark) .bg-slate-950\/95,
-html:not(.dark) .bg-slate-950\/90,
-html:not(.dark) .bg-slate-950\/80,
-html:not(.dark) .bg-slate-950\/70,
-html:not(.dark) .bg-slate-950\/60 {
-  background-color: rgba(255, 255, 255, 0.94) !important;
+html:not(.dark) header h1 {
   color: #0f172a !important;
 }
 
-html:not(.dark) .bg-slate-800 {
-  background-color: #f1f5f9 !important;
-  color: #1e293b !important;
-  border-color: #e2e8f0 !important;
+/* Executive DCFC Budget Card in Header */
+html:not(.dark) [class*="from-blue-950"],
+html:not(.dark) .header-budget-card {
+  background: linear-gradient(135deg, #eff6ff 0%, #ecfdf5 100%) !important;
+  border: 1.5px solid #bfdbfe !important;
+  box-shadow: 0 1px 4px rgba(37, 99, 235, 0.08) !important;
+}
+html:not(.dark) #header-my-team-name {
+  color: #1e3a8a !important;
+}
+html:not(.dark) #header-remaining-budget {
+  color: #059669 !important;
+}
+html:not(.dark) #header-max-bid {
+  color: #d97706 !important;
 }
 
-html:not(.dark) .bg-slate-800\/80,
-html:not(.dark) .bg-slate-800\/60 {
-  background-color: #f1f5f9 !important;
+/* Header Gauges in Light Mode */
+html:not(.dark) #header-ai-preload-container,
+html:not(.dark) header [title*="inflation rate"] {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
 }
-
-html:not(.dark) .border-slate-800,
-html:not(.dark) .border-slate-700,
-html:not(.dark) .border-slate-700\/80,
-html:not(.dark) .border-slate-700\/70,
-html:not(.dark) .border-slate-800\/80,
-html:not(.dark) .border-slate-800\/60 {
-  border-color: #e2e8f0 !important;
+html:not(.dark) #header-inflation-val {
+  color: #059669 !important;
 }
-
-html:not(.dark) .divide-slate-800\/60 > * + * {
-  border-color: #e2e8f0 !important;
-}
-
-html:not(.dark) .text-white,
-html:not(.dark) .text-slate-100,
-html:not(.dark) .text-slate-200 {
+html:not(.dark) #ai-preload-fraction {
   color: #0f172a !important;
 }
 
-html:not(.dark) .text-slate-300,
-html:not(.dark) .text-slate-400 {
-  color: #475569 !important;
+/* Header Quick Buttons */
+html:not(.dark) #btn-open-gemini-modal {
+  background: #eef2ff !important;
+  border-color: #c7d2fe !important;
+  color: #4338ca !important;
+}
+html:not(.dark) #btn-open-gemini-modal:hover {
+  background: #e0e7ff !important;
+  border-color: #818cf8 !important;
+  color: #3730a3 !important;
 }
 
-html:not(.dark) .text-slate-500 {
+html:not(.dark) #cloud-sync-status-badge {
+  background: #ecfdf5 !important;
+  border-color: #a7f3d0 !important;
+  color: #065f46 !important;
+}
+html:not(.dark) #cloud-sync-label {
+  color: #047857 !important;
+}
+
+html:not(.dark) #header-user-profile {
+  border-color: #e2e8f0 !important;
+}
+html:not(.dark) #header-user-name {
+  color: #0f172a !important;
+}
+html:not(.dark) #header-user-email {
   color: #64748b !important;
 }
 
-html:not(.dark) .hover\:bg-slate-800:hover,
-html:not(.dark) .hover\:bg-slate-700:hover,
-html:not(.dark) .hover\:bg-slate-800\/60:hover {
+/* Search Bar in Light Mode */
+html:not(.dark) #global-search-input,
+html:not(.dark) #mobile-search-input,
+html:not(.dark) #ai-admin-search-input,
+html:not(.dark) #cs-search-input,
+html:not(.dark) #rookie-search-input {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+}
+html:not(.dark) #global-search-input::placeholder,
+html:not(.dark) #mobile-search-input::placeholder,
+html:not(.dark) #ai-admin-search-input::placeholder,
+html:not(.dark) #cs-search-input::placeholder,
+html:not(.dark) #rookie-search-input::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Navigation Tabs in Light Mode */
+html:not(.dark) .tab-btn {
+  color: #475569 !important;
+}
+html:not(.dark) .tab-btn:hover {
+  color: #0f172a !important;
+  background: #e2e8f0 !important;
+}
+html:not(.dark) .tab-btn.active-tab {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3) !important;
+}
+html:not(.dark) [data-tab="in-season"] {
+  background: #ecfdf5 !important;
+  border-color: #a7f3d0 !important;
+  color: #047857 !important;
+}
+html:not(.dark) [data-tab="in-season"]:hover {
+  background: #d1fae5 !important;
+}
+html:not(.dark) [data-tab="in-season"].active-tab {
+  background: #059669 !important;
+  color: #ffffff !important;
+}
+html:not(.dark) [data-tab="ai-admin"] {
+  background: #eef2ff !important;
+  border-color: #c7d2fe !important;
+  color: #4338ca !important;
+}
+html:not(.dark) [data-tab="ai-admin"]:hover {
+  background: #e0e7ff !important;
+}
+html:not(.dark) [data-tab="ai-admin"].active-tab {
+  background: #4f46e5 !important;
+  color: #ffffff !important;
+}
+
+/* CRITICAL: Ensure solid colored buttons keep crisp white text */
+html:not(.dark) .bg-blue-600,
+html:not(.dark) .bg-blue-500,
+html:not(.dark) .bg-indigo-600,
+html:not(.dark) .bg-emerald-600,
+html:not(.dark) .bg-emerald-500,
+html:not(.dark) .bg-rose-600,
+html:not(.dark) .active-tab {
+  color: #ffffff !important;
+}
+html:not(.dark) .bg-blue-600 *,
+html:not(.dark) .bg-blue-500 *,
+html:not(.dark) .bg-indigo-600 *,
+html:not(.dark) .bg-emerald-600 *,
+html:not(.dark) .bg-emerald-500 *,
+html:not(.dark) .bg-rose-600 *,
+html:not(.dark) .active-tab * {
+  color: #ffffff !important;
+}
+
+/* Secondary Button Overrides in Light Mode */
+html:not(.dark) .bg-slate-800:not(thead th):not(.active) {
+  background-color: #f8fafc !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #1e293b !important;
+}
+html:not(.dark) .bg-slate-800:not(thead th):hover {
   background-color: #e2e8f0 !important;
   color: #0f172a !important;
 }
 
-html:not(.dark) .hover\:bg-slate-900\/80:hover {
-  background-color: #f1f5f9 !important;
+/* Panel Background Overrides for Opacity Classes */
+html:not(.dark) [class*="bg-slate-950"],
+html:not(.dark) [class*="bg-slate-900"] {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
 }
 
+/* Typography & Headings in Light Mode */
+html:not(.dark) h1, html:not(.dark) h2, html:not(.dark) h3, html:not(.dark) h4 {
+  color: #0f172a !important;
+}
+html:not(.dark) .text-white:not(.bg-blue-600 *):not(.bg-indigo-600 *):not(.bg-emerald-600 *):not(.bg-rose-600 *):not(.active-tab *):not(.badge-*) {
+  color: #0f172a !important;
+}
+html:not(.dark) .text-slate-100,
+html:not(.dark) .text-slate-200 {
+  color: #0f172a !important;
+}
+html:not(.dark) .text-slate-300 {
+  color: #334155 !important;
+}
+html:not(.dark) .text-slate-400 {
+  color: #475569 !important;
+}
+html:not(.dark) .text-slate-500 {
+  color: #64748b !important;
+}
+html:not(.dark) .text-slate-600 {
+  color: #94a3b8 !important;
+}
+
+/* Accent Color Overrides for High-Contrast Light Mode */
+html:not(.dark) .text-blue-400 {
+  color: #2563eb !important;
+}
+html:not(.dark) .text-emerald-400 {
+  color: #059669 !important;
+}
+html:not(.dark) .text-amber-400 {
+  color: #d97706 !important;
+}
+html:not(.dark) .text-amber-300 {
+  color: #b45309 !important;
+}
+html:not(.dark) .text-indigo-400,
+html:not(.dark) .text-indigo-300 {
+  color: #4338ca !important;
+}
+html:not(.dark) .text-rose-400,
+html:not(.dark) .text-rose-300 {
+  color: #dc2626 !important;
+}
+
+/* --- MY TEAM ROSTER SLOTS OVERHAUL (LIGHT MODE) --- */
+.roster-slot-empty {
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px dashed rgba(51, 65, 85, 0.8);
+  color: #64748b;
+  transition: all 0.2s ease;
+}
+.roster-slot-empty .roster-slot-badge {
+  background: rgba(30, 41, 59, 0.8);
+  color: #94a3b8;
+}
+html:not(.dark) .roster-slot-empty {
+  background: #f8fafc !important;
+  border: 1.5px dashed #cbd5e1 !important;
+  color: #475569 !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+}
+html:not(.dark) .roster-slot-empty:hover {
+  background: #f1f5f9 !important;
+  border-color: #94a3b8 !important;
+}
+html:not(.dark) .roster-slot-empty .roster-slot-badge {
+  background: #e2e8f0 !important;
+  color: #334155 !important;
+  font-weight: 700;
+}
+html:not(.dark) .roster-slot-empty .roster-slot-label {
+  color: #475569 !important;
+}
+html:not(.dark) .roster-slot-empty .roster-slot-res {
+  color: #94a3b8 !important;
+}
+
+.roster-slot-filled {
+  transition: all 0.2s ease;
+}
+html:not(.dark) .roster-slot-filled {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Bye Week Matrix in Light Mode */
+html:not(.dark) #myteam-bye-matrix-grid > div {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+}
+html:not(.dark) #myteam-bye-matrix-grid .text-slate-400 {
+  color: #64748b !important;
+}
+
+/* Budget Allocation Progress Bars in Light Mode */
+html:not(.dark) #myteam-spending-breakdown .text-slate-300 {
+  color: #0f172a !important;
+}
+html:not(.dark) #myteam-spending-breakdown .text-slate-400 {
+  color: #475569 !important;
+}
+html:not(.dark) #myteam-spending-breakdown .bg-slate-800 {
+  background-color: #e2e8f0 !important;
+}
+
+/* Empty Auction Block in Light Mode */
+html:not(.dark) #nomination-container {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06) !important;
+}
+html:not(.dark) #nomination-container [class*="bg-blue-900"] {
+  background: #eff6ff !important;
+  border-color: #bfdbfe !important;
+  color: #2563eb !important;
+}
+
+/* Quick Draft Pool in Light Mode */
+html:not(.dark) #quick-player-pool > div {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+}
+html:not(.dark) #quick-player-pool > div:hover {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+}
+html:not(.dark) #quick-pos-filters {
+  background: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+}
+html:not(.dark) #quick-pos-filters button:not(.active) {
+  color: #64748b !important;
+}
+html:not(.dark) #quick-pos-filters button:not(.active):hover {
+  color: #0f172a !important;
+}
+
+/* Partner Draft Chat in Light Mode */
+html:not(.dark) #partner-chat-expanded {
+  background: rgba(255, 255, 255, 0.98) !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.15) !important;
+}
+html:not(.dark) #partner-chat-expanded > div:first-child {
+  background: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+html:not(.dark) #partner-chat-feed {
+  background: #ffffff !important;
+}
+html:not(.dark) #partner-chat-form {
+  background: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+html:not(.dark) #partner-chat-input {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+html:not(.dark) #partner-chat-minimized {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Form Inputs, Selects & Textareas in Light Mode */
 html:not(.dark) input,
 html:not(.dark) select,
 html:not(.dark) textarea {
@@ -344,23 +615,30 @@ html:not(.dark) textarea {
   color: #0f172a !important;
   border-color: #cbd5e1 !important;
 }
-
 html:not(.dark) input::placeholder,
 html:not(.dark) textarea::placeholder {
   color: #94a3b8 !important;
 }
 
-html:not(.dark) thead.bg-slate-900 {
-  background-color: #f1f5f9 !important;
-  color: #334155 !important;
-  border-color: #cbd5e1 !important;
+/* Tables in Light Mode */
+html:not(.dark) table {
+  border-color: #e2e8f0 !important;
 }
-
+html:not(.dark) thead th {
+  background-color: #f8fafc !important;
+  color: #334155 !important;
+  border-color: #e2e8f0 !important;
+}
+html:not(.dark) tbody tr {
+  border-color: #f1f5f9 !important;
+}
+html:not(.dark) tbody tr:hover {
+  background-color: #f8fafc !important;
+}
 html:not(.dark) .row-drafted {
   opacity: 0.55;
   background-color: #f8fafc !important;
 }
-
 html:not(.dark) .row-my-team {
   background-color: rgba(16, 185, 129, 0.08) !important;
   border-left: 3px solid #059669;
@@ -368,7 +646,8 @@ html:not(.dark) .row-my-team {
 
 /* Light mode modal backdrop */
 html:not(.dark) .modal-backdrop {
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(8px);
 }
 
 /* --- Theme Toggle Switch Button --- */

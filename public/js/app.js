@@ -1369,7 +1369,7 @@ export class AuctionDraftApp {
       const p = s.player;
       if (p) {
         return `
-          <div class="flex items-center justify-between p-3 rounded-xl bg-slate-900/90 border border-slate-700/80 shadow-md">
+          <div class="roster-slot-filled flex items-center justify-between p-3 rounded-xl bg-slate-900/90 border border-slate-700/80 shadow-md">
             <div class="flex items-center gap-3">
               <span class="w-16 text-[10px] font-black uppercase tracking-wider text-slate-400 bg-slate-800 px-2 py-1 rounded text-center">${s.label.split(' ')[0]}</span>
               <span class="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase badge-${p.pos.toLowerCase()}">${p.pos}</span>
@@ -1390,12 +1390,12 @@ export class AuctionDraftApp {
         `;
       } else {
         return `
-          <div class="flex items-center justify-between p-3 rounded-xl bg-slate-950/40 border border-dashed border-slate-800 text-slate-500">
+          <div class="roster-slot-empty flex items-center justify-between p-3 rounded-xl border border-dashed border-slate-800/80 text-slate-500">
             <div class="flex items-center gap-3">
-              <span class="w-16 text-[10px] font-bold uppercase text-slate-500 bg-slate-900 px-2 py-1 rounded text-center">${s.label.split(' ')[0]}</span>
-              <span class="text-xs italic">Empty Starting Slot (${s.posReq})</span>
+              <span class="w-16 text-[10px] font-bold uppercase roster-slot-badge px-2 py-1 rounded text-center">${s.label.split(' ')[0]}</span>
+              <span class="text-xs italic roster-slot-label">Empty Starting Slot (${s.posReq})</span>
             </div>
-            <span class="text-[10px] text-slate-600 font-mono">Min $1 reserved</span>
+            <span class="text-[10px] roster-slot-res font-mono">Min $1 reserved</span>
           </div>
         `;
       }
@@ -1411,7 +1411,7 @@ export class AuctionDraftApp {
     benchContainer.innerHTML = benchSlots.map((p, i) => {
       if (p) {
         return `
-          <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/80 border border-slate-700/60 text-xs">
+          <div class="roster-slot-filled flex items-center justify-between p-2.5 rounded-xl bg-slate-900/80 border border-slate-700/60 text-xs">
             <div class="flex items-center gap-2">
               <span class="text-[10px] font-mono text-slate-500">BN${i + 1}</span>
               <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase badge-${p.pos.toLowerCase()}">${p.pos}</span>
@@ -1423,9 +1423,9 @@ export class AuctionDraftApp {
         `;
       } else {
         return `
-          <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-950/30 border border-dashed border-slate-800 text-xs text-slate-600">
-            <span>BN${i + 1} (Open Bench Spot)</span>
-            <span class="text-[10px] text-slate-700 font-mono">Optional</span>
+          <div class="roster-slot-empty flex items-center justify-between p-2.5 rounded-xl border border-dashed border-slate-800/80 text-xs text-slate-600">
+            <span class="roster-slot-label">BN${i + 1} (Open Bench Spot)</span>
+            <span class="text-[10px] roster-slot-res font-mono">Optional</span>
           </div>
         `;
       }
